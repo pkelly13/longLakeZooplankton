@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImageData>
+  <Annotation>
+    <LineColour>65535</LineColour>
+    <LineWidth>3</LineWidth>
+    <ShowLine>True</ShowLine>
+  </Annotation>
+  <ImageCalibration OnePixel="0.0325079357813275" unit="Millimeters" />
+  <ImageInformation>
+    <ImageDescription />
+    <ImageNotes />
+    <Time>7:08 PM</Time>
+    <ImageName>Chaoborus004</ImageName>
+    <Date>7/5/2012</Date>
+  </ImageInformation>
+</ImageData>

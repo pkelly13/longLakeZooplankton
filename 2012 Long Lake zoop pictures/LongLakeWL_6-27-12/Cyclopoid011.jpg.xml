@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImageData>
+  <Annotation>
+    <LineColour>65535</LineColour>
+    <LineWidth>3</LineWidth>
+    <ShowLine>True</ShowLine>
+  </Annotation>
+  <ImageCalibration OnePixel="0.0063999998569488521" unit="Millimeters" />
+  <ImageInformation>
+    <ImageDescription />
+    <ImageNotes />
+    <Time>7:23 PM</Time>
+    <ImageName>Cyclopoid011</ImageName>
+    <Date>7/5/2012</Date>
+  </ImageInformation>
+</ImageData>

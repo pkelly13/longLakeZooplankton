@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImageData>
+  <Annotation>
+    <LineColour>65535</LineColour>
+    <LineWidth>3</LineWidth>
+    <ShowLine>True</ShowLine>
+    <ScaleBarLengthMode>default</ScaleBarLengthMode>
+    <ScaleBarUserDefLength>2</ScaleBarUserDefLength>
+    <AnnotationHidden>no</AnnotationHidden>
+    <LineDrawMode>Edit</LineDrawMode>
+    <ArrowLabelText>
+    </ArrowLabelText>
+  </Annotation>
+  <ImageCalibration OnePixel="0.0081919998168945313" unit="Millimeters" />
+  <ImageInformation>
+    <ImageDescription />
+    <ImageNotes />
+    <Time>4:33 PM</Time>
+    <ImageName>Daphnia005</ImageName>
+    <Date>7/5/2012</Date>
+  </ImageInformation>
+</ImageData>
