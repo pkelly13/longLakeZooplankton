@@ -74,3 +74,51 @@ doc.final<-rbind(doc.past,doc)
 
 #write data to covariate folder
 write.csv(doc.final,'doc_2011-2014FINAL.csv')
+
+#Total phosphorus data
+#load 2014 TP data
+tp.2014<-read.xlsx('UNDERC2014_TP.xlsx',sheetIndex=1)
+
+#load TP log
+tp.log<-read.xlsx('Unfiltered Water Log 2014.xlsx',sheetIndex=1)
+
+#match TP data Conc.ugL to TP log
+tp<-c()
+for(i in 1:nrow(tp.log)){
+	rowi<-match(tp.log$Unfiltered.ID[i],tp.2014$sampleID)
+	tp[i]<-tp.2014$Conc.ugL[rowi]
+}
+tp.log$TP<-tp
+
+#use only filled out data
+tp.log<-tp.log[1:405,]
+
+#use only east and west long PML
+tp<-tp.log[tp.log$Lake.ID=='EL' | tp.log$Lake.ID=='WL',]
+tp<-tp[tp$Depth.Class=='PML',]
+
+#load 2011-2013 data
+tp.past<-dbGetQuery(con, 'SELECT tp.lakeID, tp.dateSample, tp.depthClass, tp.TP, tp.flag FROM NUTRIENTS AS tp')
+
+#use only east and west long and PML
+tp.past<-tp.past[tp.past$lakeID=='EL' | tp.past$lakeID=='WL',]
+tp.past<-tp.past[tp.past$depthClass=='PML',]
+
+#use unflagged data
+tp.past<-tp.past[tp.past$flag==0,]
+tp.past<-tp.past[,-ncol(tp.past)]
+
+#get rid of unnecessary columns from tp data frame to combine with 2014 data
+tp<-tp[,c(3,5,7,12)]
+colnames(tp)<-c('lakeID','dateSample','depthClass','TP')
+
+
+#fix dates and combine
+tp.past$dateSample<-format(as.Date(tp.past$dateSample,'%Y-%m-%d %H:%M:%S'),'%m/%d/%Y')
+tp$dateSample<-format(as.Date(tp$dateSample,'%Y-%m-%d'),'%m/%d/%Y')
+
+#combine the two data frames
+tp.final<-rbind(tp.past,tp)
+
+#write data to folder
+write.csv(tp.final,'tp_2011-2014FINAL.csv')
