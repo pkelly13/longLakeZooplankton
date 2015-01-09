@@ -1,0 +1,419 @@
+?Startup
+install.packages(pltorix)
+install.packages(plotrix)
+install.packages('plotrix')
+install.packages('Hmisc')
+install.packages('vegan')
+install.packages('reshape')
+install.packages('xlsx')
+data<-file.choose()
+data<-read.xlsx(data)
+data<-read.xlsx(data,sheetIndex=1)
+data<-file.choose()
+data.read.csv(data)
+data<-read.csv(data)
+head(data)
+boxplot(data$length.mm[data$taxa=='Daphnia' & data$lakeID=='WL']~as.Date(data$dateSample[data$taxa=='Daphnia' & data$lakeID=='WL'],'%m/%d/%y'))
+boxplot(data$length.mm[data$taxa=='Daphnia']~data$lakeID[data$taxa=='Daphnia'])
+boxplot(data$length.mm[data$taxa=='Cyclopoid']~data$lakeID[data$taxa=='Cyclopoid'])
+library(xlsx) #package that allows you to readin excel data#
+#
+#settings########
+compare.refs<-1#
+savefile<-1#
+##################
+#
+#load in data#
+filename<-file.choose()#
+data.raw<-read.xlsx(filename,1)
+#pull out blanks#
+data.blanks<-data.raw[substr(x=data.raw$Identifier.1,start=1,stop=3)=='bla',]#
+data.refs.samples<-data.raw[!substr(x=data.raw$Identifier.1,start=1,stop=3) %in% c('bla','byp'),]
+samples<-unique(data.refs.samples$Identifier.1)#
+badsamples<-c()#
+for(i in 1:length(samples)){#
+	samplei<-data.refs.samples[data.refs.samples$Identifier.1==samples[i],]#
+	maxpeak<-nrow(samplei)#
+	if(maxpeak<8){#
+		badsamples<-rbind(badsamples,samplei)#
+		message('no sample peaks for this sample')#
+		print(badsamples[,1:8])#
+		readline('press enter to check next sample in sequence - look for really high Amt (%C, %N)')#
+		print(data.refs.samples[data.refs.samples$Identifier.1==samples[i+1]])#
+		readline('press enter to continue')#
+	}#
+}
+#Add peak number to all samples#
+peak.Nr<-c()#
+for(i in 1:length(samples)){#
+	samplei<-data.refs.samples[data.refs.samples$Identifier.1==samples[i],]#
+	x=1:nrow(samplei)#
+	peak.Nr=c(peak.Nr,x)#
+}#
+data.refs.samples$Peak.Nr=peak.Nr
+data.N<-data.refs.samples[data.refs.samples$Peak.Nr==4,-c(17:19,21:27)] #cut C columns#
+data.C<-data.refs.samples[data.refs.samples$Peak.Nr==5,-c(1:16)] #cut N columns#
+if (dim(data.N)[1]==dim(data.C)[1]){  #make sure that same number of N and C rows#
+  data.CN<-cbind(data.N,data.C)#
+  data.CN.out<-data.CN[,c(2:4,9,11,12,16:17,22,24,28)]#
+  colnames<-c("ID1","ID2","Comment","Area.All.N",'Ampl.N.28','Area.N.28','d15N','%N','%C','Ampl.C.45','d13C')#
+  names(data.CN.out)<-colnames#
+}
+#separate refs and samples#
+refrows<-(substr(x=data.CN.out$ID1,start=1,stop=3)=='ref')#
+data.refs<-data.CN.out[refrows,]#
+data.samples<-data.CN.out[!refrows,]#
+#
+#save data - save raw, processed, and database prep data into a new Excel document#
+setwd('~/Documents/Notre Dame/IRMS/finished data')
+savefilename<-'PTK_102314_CFzoops.xls'#
+  write.xlsx(data.raw,savefilename,sheet='raw data',row.names=F)#
+  write.xlsx(data.refs,savefilename,sheet='refs',row.names=F,append=T)#
+  write.xlsx(data.samples,savefilename,sheet='samples',row.names=F,append=T)
+dbListTables(con)
+x<-dbGetQuery(con,'SELECT * FROM ISOTOPE_SAMPLES_POC')
+X
+x
+x<-dbGetQuery(con,'SELECT * LAB_EXPERIMENTS')
+dbListTables(con)
+x<-dbGetQuery(con,'SELECT * FROM LAB_EXPERIMENTS')
+x
+x<-dbGetQuery(con,'SELECT * FROM ISOTOPE_BATCHES')
+x
+#load data#
+setwd('~/Documents/Notre Dame/Long Lake Data/2013 Production files/R files')#
+#
+lengthsFile='longLakeZoopLengths_15Nov.csv'#
+countFile='ZoopCounts2013_15Nov.csv'#
+subsampleFile='zoopSubsampleWeight2013_15Nov.csv'#
+regressionFile='LWregressions.csv'
+head(countFile)
+lengths=read.csv(lengthsFile)#
+counts=read.csv(countFile)#
+subsampleWeights=read.csv(subsampleFile)#
+regressionCofs=read.csv(regressionFile)
+head(counts)
+setwd('~/Documents/Notre Dame/Long Lake Data/2014 Long Lake data/csv files')
+list.files()
+lengthsFile='LLlengths2014.csv'
+countFile='ZoopCounts2014.csv'
+counts=read.csv(countFile)
+had(counts)
+head(counts)
+list.files()
+subsampleFile='LLsubsampleWeights2014.csv'
+regressionFile='LWregressions.csv'
+lengths=read.csv(lengthsFile)#
+counts=read.csv(countFile)#
+subsampleWeights=read.csv(subsampleFile)#
+regressionCofs=read.csv(regressionFile)
+mass_ug=c()#
+for(i in 1:nrow(lengths)){#
+	rowi=match(lengths$taxa[i],regressionCofs$taxa)#
+	mass_ug[i]=exp((regressionCofs$b[rowi]+(regressionCofs$m[rowi]*log(lengths$length.mm[i]))))#
+}#
+lengths$mass_ug=mass_ug
+unique(lengths$taxa)
+unique(counts$taxa)
+unique(counts$Taxa)
+tolower(lengths$taxa)
+lengths$taxa<-tolower(lengths$taxa)
+lengthsFile='LLlengths2014.csv'#
+countFile='ZoopCounts2014.csv'#
+subsampleFile='LLsubsampleWeights2014.csv'#
+regressionFile='LWregressions.csv'#
+#
+lengths=read.csv(lengthsFile)#
+counts=read.csv(countFile)#
+subsampleWeights=read.csv(subsampleFile)#
+regressionCofs=read.csv(regressionFile)
+#calculate mass for each zoop#
+mass_ug=c()#
+for(i in 1:nrow(lengths)){#
+	rowi=match(lengths$taxa[i],regressionCofs$taxa)#
+	mass_ug[i]=exp((regressionCofs$b[rowi]+(regressionCofs$m[rowi]*log(lengths$length.mm[i]))))#
+}#
+lengths$mass_ug=mass_ug
+#calculate subsample multipliers#
+subsampleMult=subsampleWeights$weight.subsample/(subsampleWeights$weight.jar.full-subsampleWeights$weight.empty.jar)#
+subsampleWeights$subsampleMult=subsampleMult
+head(subsample)
+head(subsampleWeights)
+head(counts)
+head(lengths)
+lengths[1:100,]
+regressionCofs
+lengthsFile='LLlengths2014.csv'#
+countFile='ZoopCounts2014.csv'#
+subsampleFile='LLsubsampleWeights2014.csv'#
+regressionFile='LWregressions.csv'#
+#
+lengths=read.csv(lengthsFile)#
+counts=read.csv(countFile)#
+subsampleWeights=read.csv(subsampleFile)#
+regressionCofs=read.csv(regressionFile)#
+#calculate mass for each zoop#
+mass_ug=c()#
+for(i in 1:nrow(lengths)){#
+	rowi=match(lengths$taxa[i],regressionCofs$taxa)#
+	mass_ug[i]=exp((regressionCofs$b[rowi]+(regressionCofs$m[rowi]*log(lengths$length.mm[i]))))#
+}#
+lengths$mass_ug=mass_ug#
+#calculate subsample multipliers#
+subsampleMult=subsampleWeights$weight.subsample/(subsampleWeights$weight.jar.full-subsampleWeights$weight.empty.jar)#
+subsampleWeights$subsampleMult=subsampleMult
+head(lengths)
+lengths[1:100,]
+#calculate counts per m2#
+for(i in 1:nrow(counts)){#
+	rowi=match(counts$Zoop.ID[i],subsampleWeights$Zoop.ID)#
+	counts$sampleCount[i]=counts$Counts[i]/subsampleWeights$subsampleMult[rowi]#
+}	#
+#
+counts$countsPerM2=(((counts$sampleCount/2)/0.07297)/0.25)#
+#
+#add average lengths to count data#
+lengths$uniqueID=paste(lengths$sampleNum,lengths$taxa,sep='')#
+avgBiomass=tapply(lengths$mass_ug,lengths$uniqueID,mean,na.rm=T)#
+#
+#make data frame with uniqueIDs and averages#
+avgMass=data.frame(uniqueID=rownames(avgBiomass),avgBiomass)#
+rownames(avgMass)=NULL#
+#
+#make unique IDs for count data#
+counts$uniqueID=paste(counts$Zoop.ID,counts$Taxa,sep='')#
+#
+#match counts and lengths#
+for(i in 1:nrow(counts)){#
+	rowi=match(counts$uniqueID[i],avgMass$uniqueID)#
+	counts$avgBiomass_ug[i]=avgMass$avgBiomass[rowi]#
+}
+#use just East and West Long#
+LOcounts=counts[counts$Lake.ID=='EL' | counts$Lake.ID=='WL',]#
+LOcounts<-LOcounts[!is.na(LOcounts$avgBiomass_ug),] #get rid of NAs#
+LOcounts$mass_ug_m2<-LOcounts$countsPerM2*LOcounts$avgBiomass_ug #calculate areal biomass for biomass data analysis#
+zoopData2013<-LOcounts#
+zoopData2013$Jdate<-strptime(zoopData2013$Sample.date,'%m/%d/%y')$yday+1
+#use just East and West Long#
+LOcounts=counts[counts$Lake.ID=='EL' | counts$Lake.ID=='WL',]#
+LOcounts<-LOcounts[!is.na(LOcounts$avgBiomass_ug),] #get rid of NAs#
+LOcounts$mass_ug_m2<-LOcounts$countsPerM2*LOcounts$avgBiomass_ug #calculate areal biomass for biomass data analysis#
+zoopData2014<-LOcounts#
+zoopData2014$Jdate<-strptime(zoopData2013$Sample.date,'%m/%d/%y')$yday+1
+zoopData2014
+LOcounts=counts[counts$Lake.ID=='EL' | counts$Lake.ID=='WL',]#
+LOcounts<-LOcounts[!is.na(LOcounts$avgBiomass_ug),] #get rid of NAs
+LOcounts
+LOcounts=counts[counts$lakeID=='EL' | counts$lakeID=='WL',]
+LOcounts<-LOcounts[!is.na(LOcounts$avgBiomass_ug),] #get rid of NAs
+LOcounts
+LOcounts=counts[counts$lakeID=='EL' | counts$lakeID=='WL',]
+head(counts)
+LOcounts=counts[counts$Lake.ID=='EL' | counts$lake.ID=='WL',]
+LOcounts
+unique(counts$Lake.ID)
+counts$Lake.ID=='EL' | counts$lake.ID=='WL'
+counts$Lake.ID
+counts$Lake.ID=='EL'
+counts$lake.ID=='WL'
+head(counts)
+lengthsFile='LLlengths2014.csv'#
+countFile='ZoopCounts2014.csv'#
+subsampleFile='LLsubsampleWeights2014.csv'#
+regressionFile='LWregressions.csv'#
+#
+lengths=read.csv(lengthsFile)#
+counts=read.csv(countFile)#
+subsampleWeights=read.csv(subsampleFile)#
+regressionCofs=read.csv(regressionFile)#
+#
+#fix lower case z#
+sub('z','Z',counts$Zoop.ID)
+counts$Zoop.ID<-sub('z','Z',counts$Zoop.ID)
+head(counts)
+#calculate mass for each zoop#
+mass_ug=c()#
+for(i in 1:nrow(lengths)){#
+	rowi=match(lengths$taxa[i],regressionCofs$taxa)#
+	mass_ug[i]=exp((regressionCofs$b[rowi]+(regressionCofs$m[rowi]*log(lengths$length.mm[i]))))#
+}#
+lengths$mass_ug=mass_ug#
+#calculate subsample multipliers#
+subsampleMult=subsampleWeights$weight.subsample/(subsampleWeights$weight.jar.full-subsampleWeights$weight.empty.jar)#
+subsampleWeights$subsampleMult=subsampleMult#
+#
+#calculate counts per m2#
+for(i in 1:nrow(counts)){#
+	rowi=match(counts$Zoop.ID[i],subsampleWeights$Zoop.ID)#
+	counts$sampleCount[i]=counts$Counts[i]/subsampleWeights$subsampleMult[rowi]#
+}	#
+#
+counts$countsPerM2=(((counts$sampleCount/2)/0.07297)/0.25)#
+#
+#add average lengths to count data#
+lengths$uniqueID=paste(lengths$sampleNum,lengths$taxa,sep='')#
+avgBiomass=tapply(lengths$mass_ug,lengths$uniqueID,mean,na.rm=T)#
+#
+#make data frame with uniqueIDs and averages#
+avgMass=data.frame(uniqueID=rownames(avgBiomass),avgBiomass)#
+rownames(avgMass)=NULL#
+#
+#make unique IDs for count data#
+counts$uniqueID=paste(counts$Zoop.ID,counts$Taxa,sep='')#
+#
+#match counts and lengths#
+for(i in 1:nrow(counts)){#
+	rowi=match(counts$uniqueID[i],avgMass$uniqueID)#
+	counts$avgBiomass_ug[i]=avgMass$avgBiomass[rowi]#
+}#
+#
+#use just East and West Long#
+LOcounts=counts[counts$Lake.ID=='EL' | counts$Lake.ID=='WL',]
+LOcounts
+lengths[lengths$Zoop.ID==336]
+head(lengths)
+lengths[lengths$sampleNum==336]
+lengths[lengths$sampleNum==336,]
+unique(lengths$sampleDate)
+unique(lengths$dateSample)
+head(LOcounts)
+unique(LOcounts$Zoop.ID)
+LOcounts[LOcounts$Zoop.ID=='Z334']
+LOcounts[LOcounts$Zoop.ID=='Z334',]
+lengths[lengths$sampleNum=='Z334',]
+lengthsFile='LLlengths2014.csv'#
+countFile='ZoopCounts2014.csv'#
+subsampleFile='LLsubsampleWeights2014.csv'#
+regressionFile='LWregressions.csv'#
+#
+lengths=read.csv(lengthsFile)#
+counts=read.csv(countFile)#
+subsampleWeights=read.csv(subsampleFile)#
+regressionCofs=read.csv(regressionFile)#
+#
+#fix lower case z#
+counts$Zoop.ID<-sub('z','Z',counts$Zoop.ID)#
+#
+#calculate mass for each zoop#
+mass_ug=c()#
+for(i in 1:nrow(lengths)){#
+	rowi=match(lengths$taxa[i],regressionCofs$taxa)#
+	mass_ug[i]=exp((regressionCofs$b[rowi]+(regressionCofs$m[rowi]*log(lengths$length.mm[i]))))#
+}#
+lengths$mass_ug=mass_ug#
+#calculate subsample multipliers#
+subsampleMult=subsampleWeights$weight.subsample/(subsampleWeights$weight.jar.full-subsampleWeights$weight.empty.jar)#
+subsampleWeights$subsampleMult=subsampleMult#
+#
+#calculate counts per m2#
+for(i in 1:nrow(counts)){#
+	rowi=match(counts$Zoop.ID[i],subsampleWeights$Zoop.ID)#
+	counts$sampleCount[i]=counts$Counts[i]/subsampleWeights$subsampleMult[rowi]#
+}	#
+#
+counts$countsPerM2=(((counts$sampleCount/2)/0.07297)/0.25)#
+#
+#add average lengths to count data#
+lengths$uniqueID=paste(lengths$sampleNum,lengths$taxa,sep='')#
+avgBiomass=tapply(lengths$mass_ug,lengths$uniqueID,mean,na.rm=T)#
+#
+#make data frame with uniqueIDs and averages#
+avgMass=data.frame(uniqueID=rownames(avgBiomass),avgBiomass)#
+rownames(avgMass)=NULL#
+#
+#make unique IDs for count data#
+counts$uniqueID=paste(counts$Zoop.ID,counts$Taxa,sep='')#
+#
+#match counts and lengths#
+for(i in 1:nrow(counts)){#
+	rowi=match(counts$uniqueID[i],avgMass$uniqueID)#
+	counts$avgBiomass_ug[i]=avgMass$avgBiomass[rowi]#
+}#
+#
+#use just East and West Long#
+LOcounts=counts[counts$Lake.ID=='EL' | counts$Lake.ID=='WL',]#
+LOcounts<-LOcounts[!is.na(LOcounts$avgBiomass_ug),] #get rid of NAs
+LOcounts
+LOcounts$mass_ug_m2<-LOcounts$countsPerM2*LOcounts$avgBiomass_ug #calculate areal biomass for biomass data analysis#
+zoopData2014<-LOcounts#
+zoopData2014$Jdate<-strptime(zoopData2013$Sample.date,'%m/%d/%y')$yday+1#
+#
+#find mass in grams per m2#
+LOcounts$totalBiomass_gM2=LOcounts$countsPerM2*(LOcounts$avgBiomass_ug/10^6)
+strptime(zoopData2013$Sample.date,'%m/%d/%y')$yday+1
+LOcounts$mass_ug_m2<-LOcounts$countsPerM2*LOcounts$avgBiomass_ug #calculate areal biomass for biomass data analysis#
+zoopData2014<-LOcounts#
+zoopData2014$Jdate<-strptime(zoopData2014$Sample.date,'%m/%d/%y')$yday+1
+#find mass in grams per m2#
+LOcounts$totalBiomass_gM2=LOcounts$countsPerM2*(LOcounts$avgBiomass_ug/10^6)
+LOcounts
+#find average biomass per taxa per lake#
+ELtaxaBiomass=tapply(LOcounts$totalBiomass_gM2[LOcounts$Lake.ID=='EL'], LOcounts$Taxa[LOcounts$Lake.ID=='EL'],mean,na.rm=T)#
+WLtaxaBiomass=tapply(LOcounts$totalBiomass_gM2[LOcounts$Lake.ID=='WL'], LOcounts$Taxa[LOcounts$Lake.ID=='WL'],mean,na.rm=T)
+#find maximum biomass per taxa for each lake#
+ELmaxBiomass=tapply(lengths$mass_ug[lengths$lakeID=='EL'],lengths$taxa[lengths$lakeID=='EL'],max,na.rm=T)#
+WLmaxBiomass=tapply(lengths$mass_ug[lengths$lakeID=='WL'],lengths$taxa[lengths$lakeID=='WL'],max,na.rm=T)
+#get water temperature for EL and WL for 2014#
+ELtemp=24#
+WLtemp=23.5#
+#
+#Calculate production using Plante and Downing 1980-whatever #
+ELprod=0.06+(0.79*log(ELtaxaBiomass[-c(3,6,8)],10))-(0.16*log(ELmaxBiomass[-c(3,7)]/1000,10))+(0.05*ELtemp)#
+WLprod=0.06+(0.79*log(WLtaxaBiomass[-c(2,6,8)],10))-(0.16*log(WLmaxBiomass[-c(2,7)]/1000,10))+(0.05*WLtemp)#
+ELprod2013=10^ELprod#
+WLprod2013=10^WLprod
+ELmaxBiomass
+WLmaxBiomass
+ELtaxaBiomass
+WLtaxaBiomass
+ELmaxBiomass=ELmaxBiomass[-3]#
+WLmaxBiomass=WLmaxBiomass[-1]
+#get water temperature for EL and WL for 2014#
+ELtemp=24#
+WLtemp=23.5
+ELprod=0.06+(0.79*log(ELtaxaBiomass[-c(3,6,8)],10))-(0.16*log(ELmaxBiomass[-c(3,7)]/1000,10))+(0.05*ELtemp)
+WLprod=0.06+(0.79*log(WLtaxaBiomass[-c(2,6,8)],10))-(0.16*log(WLmaxBiomass[-c(2,7)]/1000,10))+(0.05*WLtemp)#
+ELprod2013=10^ELprod#
+WLprod2013=10^WLprod
+ELprod2014=10^ELprod#
+WLprod2014=10^WLprod
+ELprod2014
+WLprod2014
+ELprod=0.06+(0.79*log(ELtaxaBiomass,10))-(0.16*log(ELmaxBiomass/1000,10))+(0.05*ELtemp)#
+WLprod=0.06+(0.79*log(WLtaxaBiomass,10))-(0.16*log(WLmaxBiomass/1000,10))+(0.05*WLtemp)
+ELprod2014=10^ELprod#
+WLprod2014=10^WLprod
+ELprod2014
+WLprod2014
+barplot(c(ELprod2014[3],WLprod[1],ELprod[4],WLprod[2],ELprod[5],WLprod[3]),col=c('brown','blue','brown','blue','brown','blue'))
+barplot(c(ELprod2014[3],WLprod[1],ELprod[4],WLprod[2],ELprod[5],WLprod[3]))
+WLprod[3]
+barplot(c(ELprod2014[3],WLprod2014[1],ELprod2014[4],WLprod2014[2],ELprod2014[5],WLprod2014[3]),col=c('brown','blue','brown','blue','brown','blue'))
+setwd('~/Documents/Notre Dame/long lake data/')
+source('timeSeriesBiomassAnalysis_27Dec2013.R')
+#load data from the MAR data folder in Documents>ND>long lake data#
+setwd('~/Documents/Notre Dame/long lake data/')#
+#
+#need zooplankton data in abundance through time, need to source zooplankton time series analysis to get zoopData data frames#
+#
+source('timeSeriesBiomassAnalysis_27Dec2013.R')
+source('timeSeriesBiomassAnalysis_27Dec2013.R')
+setwd('~/Documents/Notre Dame/long lake data/')#
+#
+#need zooplankton data in abundance through time, need to source zooplankton time series analysis to get zoopData data frames#
+#
+source('timeSeriesBiomassAnalysis_27Dec2013.R')
+setwd('~/Documents/Notre Dame/long lake data/')#
+#
+#need zooplankton data in abundance through time, need to source zooplankton time series analysis to get zoopData data frames#
+#
+source('timeSeriesBiomassAnalysis_27Dec2013.R')
+#2011:#
+source(file.choose())#
+#
+#2012#
+source(file.choose())#
+#
+#2013#
+source(file.choose())
+dbListTables(con)

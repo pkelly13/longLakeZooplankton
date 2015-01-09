@@ -71,3 +71,7 @@ poc.2013$NP<-poc.2013$Nmol/poc.2013$Pmol
 #clean up data
 poc.2013<-poc.2013[,c(22,31,23,24,26,18,17,28,29,32,33,34,35,36,37,38,19)]
 
+#write to covariate data folder
+setwd('~/Documents/Notre Dame/Long lake data/covariate data')
+write.csv(poc,'pocStoich_2011-2012.csv')
+write.csv(poc.2013,'pocStoich2013.csv')
