@@ -122,3 +122,54 @@ tp.final<-rbind(tp.past,tp)
 
 #write data to folder
 write.csv(tp.final,'tp_2011-2014FINAL.csv')
+
+#Get stochiometry data into usable format
+poc<-read.csv('pocStoich_2011-2012.csv')
+poc.2013<-read.csv('pocStoich2013.csv')
+
+#add year to both data frame
+poc$year<-format(as.Date(poc$dateSample,'%Y-%m-%d %H:%M:%S'),'%Y')
+poc.2013$year<-format(as.Date(poc.2013$dateSample,'%Y-%m-%d %H:%M:%S'),'%Y')
+
+#use only columns that are needed (lake ID, date, depthClass, POC, particulateP.ugL, CP)
+poc<-poc[,c(2,3,4,8,12,16,19)]
+poc.2013<-poc.2013[,c(23,32,25,30,33,37,40)]
+#fix column names to match poc
+colnames(poc.2013)<-c('lakeID','dateSample','depthClass','POC','particulateP.ugL','CP','year')
+
+#combine data frames
+poc.tot<-rbind(poc,poc.2013)
+
+write.csv(poc.tot,'pocStoic2011-2013.csv')
+
+
+#temperature data for epilimnetic temperature as a covariate
+temp<-dbGetQuery(con,'SELECT prof.lakeID,prof.dateSample,prof.depthBottom,prof.temp FROM LIMNO_PROFILES AS prof')
+
+#use only east and west long from 0.5m
+temp<-temp[temp$lakeID=='EL' | temp$lakeID=='WL',]
+temp<-temp[temp$depthBottom==0.5,]
+
+#load 2014 data
+temp.2014<-read.csv('Limno Profiles Log 2014.csv')
+
+#use only east and west long from 0.5m
+temp.2014<-temp.2014[temp.2014$Lake.ID=='EL' | temp.2014$Lake.ID=='WL',]
+temp.2014$Depth..m.<-as.numeric(temp.2014$Depth..m.)
+temp.2014<-temp.2014[temp.2014$Depth..m.==0.50,]
+
+#use only necessary columns
+temp.2014<-temp.2014[,c(2,4,6,7)]
+
+#fix the dates
+temp$dateSample<-format(as.Date(temp$dateSample,'%Y-%m-%d %H:%M:%S'),'%Y-%m-%d')
+temp.2014$Date.Sample<-format(as.Date(temp.2014$Date.Sample,'%m/%d/%y'),'%Y-%m-%d')
+
+#change 2014 temp column headings
+colnames(temp.2014)<-c('lakeID','dateSample','depthBottom','temp')
+
+#combine the two data frames
+temp.final<-rbind(temp,temp.2014)
+
+#write to folder
+write.csv(temp.final,'epiTemp2011-2014.csv')

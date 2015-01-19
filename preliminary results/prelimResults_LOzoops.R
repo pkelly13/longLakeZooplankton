@@ -9,43 +9,6 @@ zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')
 #use only Long data
 zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]
 
-#plot areal abundance
-zoop.data$abundance_m2<-zoop.data$abundance_num_m3*zoop.data$depthBottom
-zoop.data$biomass_g_m2<-(zoop.data$abundance_m2*zoop.data$meanMass_ug)/1000000
-
-#Daphnia
-plot(as.Date(zoop.data$dateSample[zoop.data$lakeID=='WL' &zoop.data$taxa=='daphnia'],'%Y-%m-%d'),zoop.data$abundance_m2[zoop.data$lakeID=='WL' &zoop.data$taxa=='daphnia'],xlab='',ylab=expression(paste('Daphnia m'^-2)))
-points(as.Date(zoop.data$dateSample[zoop.data$lakeID=='EL' &zoop.data$taxa=='daphnia'],'%Y-%m-%d'),zoop.data$abundance_m2[zoop.data$lakeID=='EL' &zoop.data$taxa=='daphnia'],pch=19)
-legend('topright',pch=c(1,19),legend=c('WL','EL'))
-
-#Cyclopoids
-plot(as.Date(zoop.data$dateSample[zoop.data$lakeID=='WL' &zoop.data$taxa=='cyclopoid'],'%Y-%m-%d'),zoop.data$abundance_m2[zoop.data$lakeID=='WL' &zoop.data$taxa=='cyclopoid'],xlab='',ylab=expression(paste('Cyclopoids m'^-2)))
-points(as.Date(zoop.data$dateSample[zoop.data$lakeID=='EL' &zoop.data$taxa=='cyclopoid'],'%Y-%m-%d'),zoop.data$abundance_m2[zoop.data$lakeID=='EL' &zoop.data$taxa=='cyclopoid'],pch=19)
-legend('topright',pch=c(1,19),legend=c('WL','EL'))
-
-#Holopedium
-plot(as.Date(zoop.data$dateSample[zoop.data$lakeID=='WL' &zoop.data$taxa=='holopedium'],'%Y-%m-%d'),zoop.data$abundance_m2[zoop.data$lakeID=='WL' &zoop.data$taxa=='holopedium'],xlab='',ylab=expression(paste('Holopedium m'^-2)))
-points(as.Date(zoop.data$dateSample[zoop.data$lakeID=='EL' &zoop.data$taxa=='holopedium'],'%Y-%m-%d'),zoop.data$abundance_m2[zoop.data$lakeID=='EL' &zoop.data$taxa=='holopedium'],pch=19)
-legend('topright',pch=c(1,19),legend=c('WL','EL'))
-
-#plot average biomass by date and basin
-plot(as.Date(zoop.data$dateSample[zoop.data$lakeID=='WL' &zoop.data$taxa=='daphnia'],'%Y-%m-%d'),zoop.data$meanMass_ug[zoop.data$lakeID=='WL' &zoop.data$taxa=='daphnia'],xlab='',ylab=expression(paste('Daphnia m'^-2)))
-points(as.Date(zoop.data$dateSample[zoop.data$lakeID=='EL' &zoop.data$taxa=='daphnia'],'%Y-%m-%d'),zoop.data$meanMass_ug[zoop.data$lakeID=='EL' &zoop.data$taxa=='daphnia'],pch=19)
-legend('topright',pch=c(1,19),legend=c('WL','EL'))
-
-#Cyclopoids
-plot(as.Date(zoop.data$dateSample[zoop.data$lakeID=='WL' &zoop.data$taxa=='cyclopoid'],'%Y-%m-%d'),zoop.data$meanMass_ug[zoop.data$lakeID=='WL' &zoop.data$taxa=='cyclopoid'],xlab='',ylab=expression(paste('Cyclopoids m'^-2)))
-points(as.Date(zoop.data$dateSample[zoop.data$lakeID=='EL' &zoop.data$taxa=='cyclopoid'],'%Y-%m-%d'),zoop.data$meanMass_ug[zoop.data$lakeID=='EL' &zoop.data$taxa=='cyclopoid'],pch=19)
-legend('topright',pch=c(1,19),legend=c('WL','EL'))
-
-#Holopedium
-plot(as.Date(zoop.data$dateSample[zoop.data$lakeID=='WL' &zoop.data$taxa=='holopedium'],'%Y-%m-%d'),zoop.data$meanMass_ug[zoop.data$lakeID=='WL' &zoop.data$taxa=='holopedium'],xlab='',ylab=expression(paste('Holopedium m'^-2)),ylim=c(0,60))
-points(as.Date(zoop.data$dateSample[zoop.data$lakeID=='EL' &zoop.data$taxa=='holopedium'],'%Y-%m-%d'),zoop.data$meanMass_ug[zoop.data$lakeID=='EL' &zoop.data$taxa=='holopedium'],pch=19)
-legend('topright',pch=c(1,19),legend=c('WL','EL'))
-
-boxplot(zoop.data$meanMass_ug[zoop.data$taxa=='daphnia' & zoop.data$lakeID=='WL'],zoop.data$meanMass_ug[zoop.data$taxa=='daphnia' & zoop.data$lakeID=='EL'])
-
-
 #match samples by date east and west
 #make unique ID that is date-taxa
 zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='_')
@@ -95,3 +58,124 @@ RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & EL.data$year==2011 | EL.
 
 #Holopedium
 RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & EL.data$year==2011 | EL.data$year==2012],pre2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & EL.data$year==2011 | EL.data$year==2012],post1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & EL.data$year==2013 | EL.data$year==2014], post2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & EL.data$year==2013 | EL.data$year==2014])
+
+
+#Calculate zooplankton production using Plante and Downing equation
+#load zooplankton biomass
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
+
+zoops<-read.csv('zoopData2011_2014.csv')
+zoops$biomass.gm2<-zoops$biomass_gDryMass_m3*zoops$depthBottom
+zoops$year<-format(as.Date(zoops$dateSample,'%Y-%m-%d'),'%Y')
+#only EL and WL
+zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]
+
+#calculate zooplankton production
+#load zooplankton lengths
+lengths.past<-dbGetQuery(con,'SELECT length.lakeID,length.dateSample,length.taxa,length.length,length.mass FROM ZOOPS_LENGTHS AS length')
+#Use only East and West Long
+lengths.past<-lengths.past[lengths.past$lakeID=='EL' | lengths.past$lakeID=='WL',]
+#add year
+lengths.past<-addYear(lengths.past)
+
+#load 2014 data
+setwd('~/Documents/Notre Dame/long lake data/2014 long lake data/csv files')
+lengths.2014<-read.csv('LLlengths2014.csv')
+lw.regression<-read.csv('LWregressions.csv')
+
+#calculate mass by taxa
+mass_ug=c()
+for(i in 1:nrow(lengths.2014)){
+	rowi=match(lengths.2014$taxa[i],lw.regression$taxa)
+	mass_ug[i]=exp((lw.regression$b[rowi]+(lw.regression$m[rowi]*log(lengths.2014$length.mm[i]))))
+}
+lengths.2014$mass_mg=(mass_ug/1000)
+lengths.2014$year<-format(as.Date(lengths.2014$dateSample,'%m/%d/%y'),'%Y')
+
+#get temperature data
+temp.past<-dbGetQuery(con,'SELECT temp.lakeID,temp.dateSample,temp.depthBottom,temp.temp FROM LIMNO_PROFILES AS temp')
+#add year
+temp.past<-addYear(temp.past)
+
+#use only East and West Long data
+temp.past<-temp.past[temp.past$lakeID=='EL' | temp.past$lakeID=='WL',]
+temp.past<-temp.past[temp.past$depthBottom==0,]
+
+#get 2014 temperature data
+setwd('~/Documents/Notre Dame/long lake data/covariate data')
+temp.2014<-read.csv('Limno Profiles Log 2014.csv')
+#use only East and West Long data
+temp.2014<-temp.2014[temp.2014$lakeID=='EL' | temp.2014$lakeID=='WL',]
+temp.2014<-temp.2014[temp.2014$Depth..m.==0,]
+
+#calculate production by taxa for East and West Long and for each year
+#2011
+#East Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2011 & zoops$lakeID=='EL'],zoops$taxa[zoops$year==2011 & zoops$lakeID=='EL'],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.past$mass[lengths.past$year==2011 & lengths.past$lakeID=='EL'],lengths.past$taxa[lengths.past$year==2011 & lengths.past$lakeID=='EL'],max,na.rm=T)/1000
+max.mass.mg<-max.mass.mg[-c(3,5)]
+temp<-mean(temp.past$temp[temp.past$year==2011 & temp.past$lakeID=='EL'])
+production.EL.2011<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.EL.2011<-10^production.EL.2011
+#West Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2011 & zoops$lakeID=='WL'],zoops$taxa[zoops$year==2011 & zoops$lakeID=='WL'],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.past$mass[lengths.past$year==2011 & lengths.past$lakeID=='WL'],lengths.past$taxa[lengths.past$year==2011 & lengths.past$lakeID=='WL'],max,na.rm=T)/1000
+max.mass.mg<-max.mass.mg[-c(1,2)]
+temp<-mean(temp.past$temp[temp.past$year==2011 & temp.past$lakeID=='WL'])
+production.WL.2011<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.WL.2011<-10^production.WL.2011
+
+#2012
+#East Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2012 & zoops$lakeID=='EL' & zoops$projectID==3],zoops$taxa[zoops$year==2012 & zoops$lakeID=='EL' & zoops$projectID==3],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.past$mass[lengths.past$year==2012 & lengths.past$lakeID=='EL'],lengths.past$taxa[lengths.past$year==2012 & lengths.past$lakeID=='EL'],max,na.rm=T)/1000
+temp<-mean(temp.past$temp[temp.past$year==2012 & temp.past$lakeID=='EL'])
+production.EL.2012<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.EL.2012<-10^production.EL.2012
+#West Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2012 & zoops$lakeID=='WL' & zoops$projectID==3],zoops$taxa[zoops$year==2012 & zoops$lakeID=='WL' & zoops$projectID==3],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.past$mass[lengths.past$year==2012 & lengths.past$lakeID=='WL'],lengths.past$taxa[lengths.past$year==2012 & lengths.past$lakeID=='WL'],max,na.rm=T)/1000
+temp<-mean(temp.past$temp[temp.past$year==2012 & temp.past$lakeID=='WL'])
+production.WL.2012<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.WL.2012<-10^production.WL.2012
+
+#2013
+#East Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2013 & zoops$lakeID=='EL'],zoops$taxa[zoops$year==2013 & zoops$lakeID=='EL'],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.past$mass[lengths.past$year==2013 & lengths.past$lakeID=='EL'],lengths.past$taxa[lengths.past$year==2013 & lengths.past$lakeID=='EL'],max,na.rm=T)/1000
+temp<-mean(temp.past$temp[temp.past$year==2013 & temp.past$lakeID=='EL'])
+production.EL.2013<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.EL.2013<-10^production.EL.2013
+#West Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2013 & zoops$lakeID=='WL'],zoops$taxa[zoops$year==2013 & zoops$lakeID=='WL'],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.past$mass[lengths.past$year==2013 & lengths.past$lakeID=='WL'],lengths.past$taxa[lengths.past$year==2013 & lengths.past$lakeID=='WL'],max,na.rm=T)/1000
+temp<-mean(temp.past$temp[temp.past$year==2013 & temp.past$lakeID=='WL'])
+production.WL.2013<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.WL.2013<-10^production.WL.2013
+
+#2014
+#East Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2014 & zoops$lakeID=='EL'],zoops$taxa[zoops$year==2014 & zoops$lakeID=='EL'],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.2014$mass_mg[lengths.2014$lakeID=='EL'],lengths.2014$taxa[lengths.2014$lakeID=='EL'],mean,na.rm=T)
+max.mass.mg<-max.mass.mg[-3]
+temp<-mean(temp.2014$temp[temp.2014$Lake.ID=='EL'])
+production.EL.2014<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.EL.2014<-10^production.EL.2014
+#West Long
+avg.mass.gm2<-tapply(zoops$biomass.gm2[zoops$year==2014 & zoops$lakeID=='WL'],zoops$taxa[zoops$year==2014 & zoops$lakeID=='WL'],mean,na.rm=T)
+max.mass.mg<-tapply(lengths.2014$mass_mg[lengths.2014$lakeID=='WL'],lengths.2014$taxa[lengths.2014$lakeID=='WL'],mean,na.rm=T)
+max.mass.mg<-max.mass.mg[-1]
+temp<-mean(temp.2014$temp[temp.2014$Lake.ID=='WL'])
+production.WL.2014<-0.06+(0.79*log(avg.mass.gm2,10))-(0.16*log(max.mass.mg,10))+(0.05*temp)
+production.WL.2014<-10^production.WL.2014
+
+#make comprehensive data frame of zooplankton production data
+production.2011<-data.frame(lakeID=c(rep('EL',length(production.EL.2011)),rep('WL',length(production.WL.2011))),taxa=c(rownames(production.EL.2011),rownames(production.WL.2011)),production.g.m2.yr=c(production.EL.2011,production.WL.2011),year=rep(2011,length(c(production.EL.2011,production.WL.2011))))
+production.2012<-data.frame(lakeID=c(rep('EL',length(production.EL.2012)),rep('WL',length(production.WL.2012))),taxa=c(rownames(production.EL.2012),rownames(production.WL.2012)),production.g.m2.yr=c(production.EL.2012,production.WL.2012),year=rep(2012,length(c(production.EL.2012,production.WL.2012))))
+production.2013<-data.frame(lakeID=c(rep('EL',length(production.EL.2013)),rep('WL',length(production.WL.2013))),taxa=c(rownames(production.EL.2013),rownames(production.WL.2013)),production.g.m2.yr=c(production.EL.2013,production.WL.2013),year=rep(2013,length(c(production.EL.2013,production.WL.2013))))
+production.2014<-data.frame(lakeID=c(rep('EL',length(production.EL.2014)),rep('WL',length(production.WL.2014))),taxa=c(rownames(production.EL.2014),rownames(production.WL.2014)),production.g.m2.yr=c(production.EL.2014,production.WL.2014),year=rep(2014,length(c(production.EL.2014,production.WL.2014))))
+production<-rbind(production.2011,production.2012,production.2013,production.2014)
+
+#write this to a csv file in final data
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
+write.csv(production,'productionByTaxa_2011-2014.csv')

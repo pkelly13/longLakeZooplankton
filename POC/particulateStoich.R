@@ -41,10 +41,29 @@ poc$CP<-poc$Cmol/poc$Pmol
 poc$CN<-poc$Cmol/poc$Nmol
 poc$NP<-poc$Nmol/poc$Pmol
 
-#2013 data
+#2013-2014 data
 #load poc data
 setwd('~/Documents/Notre Dame/long lake data/POC')
 poc.2013<-read.csv('2013UNDERC_POCwSampleInfo.csv')
+poc.2014<-read.csv('2014UNDERC_POCwSampleInfo.csv')
+
+#calculate POC and PON for poc.2014
+poc.2014$PON<-poc.2014$mgN/(poc.2014$volFiltered/1000)
+poc.2014$POC<-poc.2014$mgC/(poc.2014$volFiltered/1000)
+poc.2014$flag<-rep(0,nrow(poc.2014))
+
+#reformat 2014 data to match 2013 data
+poc.2014<-poc.2014[,c(1:16,18,17,29,19,20,21,22:28)] #shuffle columns around to match 2013 data
+poc.2013<-poc.2013[,-c(ncol(poc.2013),ncol(poc.2013)-1)]
+poc.2013$Date.time<-format(as.Date(poc.2013$Date.time,'%m/%d/%y %H:%M'),'%m/%d/%Y') #reformat dates to match
+colnames(poc.2013)=colnames(poc.2014) #change the column names in poc.2013 to the same as poc.2014
+
+#combine the two data frames
+poc.2013<-rbind(poc.2013,poc.2014)
+
+#save for use in isotopes
+setwd('~/Documents/Notre Dame/long lake data/isotopes')
+write.csv(poc.2013,'POCisotopes_2013-2014.csv')
 
 #load POP data
 setwd('~/Documents/Notre Dame/UNDERC 2014/Water chemistry')
@@ -59,8 +78,8 @@ for(i in 1:nrow(poc.2013)){
 poc.2013$particulateP.ug<-particulateP.ug
 
 #calculate C, N, and P in mols
-poc.2013$Cmol<-(poc.2013$amountC.mg/1000)/12.011
-poc.2013$Nmol<-(poc.2013$amountN.mg/1000)/14.007
+poc.2013$Cmol<-(poc.2013$mgC/1000)/12.011
+poc.2013$Nmol<-(poc.2013$mgN/1000)/14.007
 poc.2013$Pmol<-(poc.2013$particulateP.ug/1000000)/30.973
 
 #calculate C:P, C:N, and N:P
@@ -69,9 +88,14 @@ poc.2013$CN<-poc.2013$Cmol/poc.2013$Nmol
 poc.2013$NP<-poc.2013$Nmol/poc.2013$Pmol
 
 #clean up data
-poc.2013<-poc.2013[,c(22,31,23,24,26,18,17,28,29,32,33,34,35,36,37,38,19)]
+poc<-poc[,-c(5,6,10)]
+poc$dateSample<-format(as.Date(poc$dateSample,'%Y-%m-%d %H:%M:%S'),'%m/%d/%Y')
+cu.poc<-poc.2013[,c(22,21,24,26,29,28,19,30,31:36)]
+colnames(poc)=colnames(cu.poc)
+
+poc<-rbind(poc,cu.poc)
+
 
 #write to covariate data folder
 setwd('~/Documents/Notre Dame/Long lake data/covariate data')
-write.csv(poc,'pocStoich_2011-2012.csv')
-write.csv(poc.2013,'pocStoich2013.csv')
+write.csv(poc,'pocStoich_2011-2014.csv')

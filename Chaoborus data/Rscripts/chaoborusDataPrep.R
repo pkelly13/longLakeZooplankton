@@ -173,3 +173,6 @@ total.count$abundance.m2<-((total.count$count/0.25)/2)/0.07297
 
 #make column of biomass m-2 (in grams)
 total.count$g.m2<-(total.count$avgWeight.mg/1000)*total.count$abundance.m2
+
+#Write data to folder
+write.csv(total.count,'chaoborusDataLongLake2011-2014.csv')

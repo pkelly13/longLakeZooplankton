@@ -46,12 +46,41 @@ X<-X[WLyearX==WLyearY,]
 Y<-Y[WLyearX==WLyearY,]
 covMat<-covMat[WLyearX==WLyearY,]
 
+#make z-scored matrix to find effect sizes
+col.mean<-colMeans(covMat) #get means for columns
+col.sd<-apply(covMat,2,sd)
+
+z.covMat<-c()
+for(i in 1:nrow(covMat)){
+	x<-(covMat[i,]-col.mean)/col.sd
+	z.covMat<-rbind(z.covMat,x)
+}
+
+#z-score X and Y
+col.mean<-colMeans(X)
+col.sd<-apply(X,2,sd)
+
+z.X<-c()
+for(i in 1:nrow(X)){
+	x<-(X[i,]-col.mean)/col.sd
+	z.X<-rbind(z.X,x)
+}
+
+col.mean<-colMeans(Y)
+col.sd<-apply(Y,2,sd)
+
+z.Y<-c()
+for(i in 1:nrow(X)){
+	x<-(Y[i,]-col.mean)/col.sd
+	z.Y<-rbind(z.Y,x)
+}
+
 one<-rep(1,nrow(X)) #1 in the model
 
-Z<-cbind(one,X,covMat) #combining 1, X, u if we had it
+Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix
 
 #estimate parameters using CLS
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%Y
+D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
 
 #calculate predicted 
 predict<-Z%*%D

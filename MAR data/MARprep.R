@@ -33,6 +33,10 @@ for(i in 1:nrow(daphnia)){
 	zoop.data<-rbind(x,zoop.data)
 }
 
+#save to MAR data folder
+setwd('~/Documents/Notre Dame/long lake data/MAR data')
+
+write.csv(zoop.data,'zoopDataMatrix2011-2014.csv')
 
 #########################################################
 #														#
@@ -55,7 +59,7 @@ setwd('~/Documents/Notre Dame/long lake data/covariate data')
 doc<-read.csv('doc_2011-2014FINAL.csv')
 tp<-read.csv('tp_2011-2014FINAL.csv')
 chl<-read.csv('chl_2011-2014FINAL.csv')
-stoich<-read.csv('pocStoic2011-2013.csv')
+stoich<-read.csv('pocStoich_2011-2014.csv')
 
 #fix dates on all of them
 doc$dateSample<-format(as.Date(doc$dateSample,'%m/%d/%Y'),'%Y-%m-%d')
@@ -67,7 +71,7 @@ tp$uniqueID<-paste(tp$lakeID,tp$dateSample,sep='.')
 chl$dateSample<-format(as.Date(chl$dateSample,'%m/%d/%Y'),'%Y-%m-%d')
 chl$uniqueID<-paste(chl$lakeID,chl$dateSample,sep='.')
 
-stoich$dateSample<-format(as.Date(stoich$dateSample,'%Y-%m-%d %H:%M:%S'),'%Y-%m-%d')
+stoich$dateSample<-format(as.Date(stoich$dateSample,'%m/%d/%Y'),'%Y-%m-%d')
 stoich$uniqueID<-paste(stoich$lakeID,stoich$dateSample,sep='.')
 
 #Get temperature data
