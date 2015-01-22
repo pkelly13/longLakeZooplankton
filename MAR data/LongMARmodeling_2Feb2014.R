@@ -8,37 +8,18 @@ setwd('~/Documents/Notre Dame/long lake data/')
 
 source('timeSeriesBiomassAnalysis_27Dec2013.R')
 
-#make abundance data frames for each year
-zoopAbund2011<-data.frame(lakeID=zoopData2011$lakeID,dateSample=zoopData2011$dateSample,taxa=zoopData2011$taxa,abundance_m2=zoopData2011$abundance_num_m2,stringsAsFactors=FALSE)
+#TRY THIS WITH BIOMASS TIME SERIES DATA
+setwd('~/Documents/Notre Dame/long lake data/MAR data')
 
-#convert date to YYYY-mm-dd
-zoopAbund2011$dateSample<-format(as.Date(zoopAbund2011$dateSample,'%Y-%m-%d %H:%M:%S'),'%Y-%m-%d')
-
-#2012 data
-zoopAbund2012<-data.frame(lakeID=zoopData2012$lake,dateSample=zoopData2012$date,taxa=zoopData2012$taxa,abundance_m2=zoopData2012$countsPerM2,stringsAsFactors=FALSE)
-
-#convert date to YYYY-mm-dd
-zoopAbund2012$dateSample<-format(as.Date(zoopAbund2012$dateSample,'%m/%d/%y'),'%Y-%m-%d')
-
-#2013 data
-zoopAbund2013<-data.frame(lakeID=zoopData2013$Lake.ID,dateSample=zoopData2013$Sample.date,taxa=zoopData2013$Taxa,abundance_m2=zoopData2013$countsPerM2,stringsAsFactors=FALSE)
-
-#convert date to YYYY-mm-dd
-zoopAbund2013$dateSample<-format(as.Date(zoopAbund2013$dateSample,'%m/%d/%y'),'%Y-%m-%d')
-
-#combine all 3 years into data frame
-ALabund<-rbind(zoopAbund2011,zoopAbund2012,zoopAbund2013)
-
-#change 'cyclopoids' to 'cyclopoid'
-ALabund$taxa[grep('cyclopoids',ALabund$taxa)]='cyclopoid'
+mass<-read.csv('biomassTimeSeriesData_1Feb2014.csv')
 
 #make matching unique ID in biomass data to match to chaob data to
-ALabund$uniqueID<-paste(ALabund$lakeID,ALabund$dateSample,sep='')
+mass$uniqueID<-paste(mass$lakeID,mass$dateSample,sep='')
 
 #make taxa specific data frames
-daphnia<-ALabund[ALabund$taxa=='daphnia',]
-cyclopoids<-ALabund[ALabund$taxa=='cyclopoid',]
-holopedium<-ALabund[ALabund$taxa=='holopedium',]
+daphnia<-mass[mass$taxa=='daphnia',]
+cyclopoids<-mass[mass$taxa=='cyclopoid',]
+holopedium<-mass[mass$taxa=='holopedium',]
 
 #load chaoborus data
 setwd('~/Documents/Notre Dame/long lake data/MAR data')
@@ -54,21 +35,21 @@ chaobs$uniqueID<-paste(chaobs$lakeID,chaobs$dateSample,sep='')
 daph<-c()
 for(i in 1:nrow(chaobs)){
 	rowi=match(chaobs$uniqueID[i],daphnia$uniqueID)
-	daph[i]=daphnia$abundance_m2[rowi]
+	daph[i]=daphnia$biomass[rowi]
 }
 chaobs$daphnia=daph
 
 cyc<-c()
 for(i in 1:nrow(chaobs)){
 	rowi=match(chaobs$uniqueID[i],cyclopoids$uniqueID)
-	cyc[i]=cyclopoids$abundance_m2[rowi]
+	cyc[i]=cyclopoids$biomass[rowi]
 }
 chaobs$cyclopoid=cyc
 
 holo<-c()
 for(i in 1:nrow(chaobs)){
 	rowi=match(chaobs$uniqueID[i],holopedium$uniqueID)
-	holo[i]=holopedium$abundance_m2[rowi]
+	holo[i]=holopedium$biomass[rowi]
 }
 chaobs$holopedium=holo
 

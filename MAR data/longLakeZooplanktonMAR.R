@@ -93,10 +93,10 @@ predict<-Z%*%D
 
 Q<-nrow(X)
 P<-ncol(X)
-R<-0
-E<-predict-Y
+R<-ncol(z.covMat)
+E<-predict-z.Y
 rmse<-sd(E)
-varY=matrix(c(Y[,1]-mean(Y[,1]),Y[,2]-mean(Y[,2]),Y[,3]-mean(Y[,3])),ncol=3)
+varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=3)
 
 sigma<-t(E)%*%E/Q
 lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2
@@ -106,7 +106,7 @@ varMatrix<-t(varY)%*%varY/Q
 R2<-1-diag(sigma)/diag(varMatrix)
 
 #calculate r^2 based on dY's
-varDY=(Y-X)[-1,]
+varDY=(z.Y-z.X)[-1,]
 DYhat=c()
 for(i in 2:nrow(predict)){
 	x=predict[i,]-predict[i-1,]
@@ -116,5 +116,196 @@ for(i in 2:nrow(predict)){
 E_D<-DYhat-varDY
 
 QD<-nrow(Y)
+varMatrix_D<-t(varDY)%*%varDY/Q
+R2_D<-diag(sigma)/diag(varMatrix_D)
+
+#things to try: include chaobs as a taxa, use GPP instead of chlorophyll, just do East Long
+#RIA on chaoborus
+
+#First: include chaobs in taxa
+#build a matrix of data with 4 taxa
+tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)
+
+#make X and Y
+X=tsMat[1:nrow(tsMat)-1,] # this is Xt
+Y=tsMat[2:nrow(tsMat),] #this is Xt+1
+
+#make covariate matrix
+covMat<-as.matrix(tot.data[,9:13],ncol=5)
+covMat<-covMat[1:nrow(covMat)-1,]
+
+#remove transition year data points in both X, Y, and covariate data
+WLyearX<-tot.data$year[tot.data$lakeID=='WL'][1:length(tot.data$year[tot.data$lakeID=='WL'])-1]
+WLyearY<-tot.data$year[tot.data$lakeID=='WL'][2:length(tot.data$year[tot.data$lakeID=='WL'])]
+
+X<-X[WLyearX==WLyearY,]
+Y<-Y[WLyearX==WLyearY,]
+covMat<-covMat[WLyearX==WLyearY,]
+
+#make z-scored matrix to find effect sizes
+col.mean<-colMeans(covMat) #get means for columns
+col.sd<-apply(covMat,2,sd)
+
+z.covMat<-c()
+for(i in 1:nrow(covMat)){
+	x<-(covMat[i,]-col.mean)/col.sd
+	z.covMat<-rbind(z.covMat,x)
+}
+
+#z-score X and Y
+col.mean<-colMeans(X)
+col.sd<-apply(X,2,sd)
+
+z.X<-c()
+for(i in 1:nrow(X)){
+	x<-(X[i,]-col.mean)/col.sd
+	z.X<-rbind(z.X,x)
+}
+
+col.mean<-colMeans(Y)
+col.sd<-apply(Y,2,sd)
+
+z.Y<-c()
+for(i in 1:nrow(X)){
+	x<-(Y[i,]-col.mean)/col.sd
+	z.Y<-rbind(z.Y,x)
+}
+
+one<-rep(1,nrow(X)) #1 in the model
+
+Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix
+
+#estimate parameters using CLS
+D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
+
+#calculate predicted 
+predict<-Z%*%D
+#Q=length of time series
+#P=number of species
+#R=number of coviates
+#E=errors (predict-X)
+#varY=variance in Y=obs-mean
+#root mean squared error sd(E)
+
+Q<-nrow(X)
+P<-ncol(X)
+R<-ncol(z.covMat)
+E<-predict-z.Y
+rmse<-sd(E)
+varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=4)
+
+sigma<-t(E)%*%E/Q
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2
+
+#calculate total r2
+varMatrix<-t(varY)%*%varY/Q
+R2<-(1-diag(sigma))/diag(varMatrix)
+
+#calculate r^2 based on dY's
+varDY=(z.Y-z.X)[-1,]
+DYhat=c()
+for(i in 2:nrow(predict)){
+	x=predict[i,]-predict[i-1,]
+	DYhat=rbind(DYhat,x)
+}
+
+E_D<-DYhat-varDY
+
+QD<-nrow(z.Y)
+varMatrix_D<-t(varDY)%*%varDY/Q
+R2_D<-diag(sigma)/diag(varMatrix_D)
+
+
+#Now try using only East Long data
+tot.data<-tot.data[tot.data$lakeID=='EL',]
+
+tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)
+
+#make X and Y
+X=tsMat[1:nrow(tsMat)-1,] # this is Xt
+Y=tsMat[2:nrow(tsMat),] #this is Xt+1
+
+#make covariate matrix
+covMat<-as.matrix(tot.data[,9:13],ncol=5)
+covMat<-covMat[1:nrow(covMat)-1,]
+
+#remove transition year data points in both X, Y, and covariate data
+ELyearX<-tot.data$year[tot.data$lakeID=='EL'][1:length(tot.data$year[tot.data$lakeID=='EL'])-1]
+ELyearY<-tot.data$year[tot.data$lakeID=='EL'][2:length(tot.data$year[tot.data$lakeID=='EL'])]
+
+X<-X[ELyearX==ELyearY,]
+Y<-Y[ELyearX==ELyearY,]
+covMat<-covMat[ELyearX==ELyearY,]
+
+#make z-scored matrix to find effect sizes
+col.mean<-colMeans(covMat) #get means for columns
+col.sd<-apply(covMat,2,sd)
+
+z.covMat<-c()
+for(i in 1:nrow(covMat)){
+	x<-(covMat[i,]-col.mean)/col.sd
+	z.covMat<-rbind(z.covMat,x)
+}
+
+#z-score X and Y
+col.mean<-colMeans(X)
+col.sd<-apply(X,2,sd)
+
+z.X<-c()
+for(i in 1:nrow(X)){
+	x<-(X[i,]-col.mean)/col.sd
+	z.X<-rbind(z.X,x)
+}
+
+col.mean<-colMeans(Y)
+col.sd<-apply(Y,2,sd)
+
+z.Y<-c()
+for(i in 1:nrow(X)){
+	x<-(Y[i,]-col.mean)/col.sd
+	z.Y<-rbind(z.Y,x)
+}
+
+one<-rep(1,nrow(X)) #1 in the model
+
+Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix
+
+#estimate parameters using CLS
+D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
+
+#calculate predicted 
+predict<-Z%*%D
+#Q=length of time series
+#P=number of species
+#R=number of coviates
+#E=errors (predict-X)
+#varY=variance in Y=obs-mean
+#root mean squared error sd(E)
+
+Q<-nrow(X)
+P<-ncol(X)
+R<-ncol(z.covMat)
+E<-predict-z.Y
+rmse<-sd(E)
+varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=4)
+
+sigma<-t(E)%*%E/Q
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2
+
+#calculate total r2
+varMatrix<-t(varY)%*%varY/Q
+R2<-(1-diag(sigma))/diag(varMatrix)
+
+#calculate r^2 based on dY's
+varDY=(z.Y-z.X)[-1,]
+DYhat=c()
+for(i in 2:nrow(predict)){
+	x=predict[i,]-predict[i-1,]
+	DYhat=rbind(DYhat,x)
+}
+
+E_D<-DYhat-varDY
+
+QD<-nrow(z.Y)
 varMatrix_D<-t(varDY)%*%varDY/Q
 R2_D<-diag(sigma)/diag(varMatrix_D)

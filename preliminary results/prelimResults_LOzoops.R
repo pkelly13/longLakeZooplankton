@@ -179,3 +179,52 @@ production<-rbind(production.2011,production.2012,production.2013,production.201
 #write this to a csv file in final data
 setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
 write.csv(production,'productionByTaxa_2011-2014.csv')
+
+#Taxon-specific production
+#figure out %copepod production
+#make uniqueID from lake-year
+prod$uniqueID<-paste(prod$lakeID,prod$year,sep='.')
+uniques<-unique(prod$uniqueID)
+percent.prod<-c()
+for(i in 1:length(uniques)){
+	lakei<-prod[prod$uniqueID==uniques[i],]
+	tot<-sum(lakei$production.g.m2.yr)
+	x<-c()
+	for(j in 1:nrow(lakei)){
+		x[j]<-lakei$production.g.m2.yr[j]/tot
+	}
+	percent.prod<-c(percent.prod,x)
+}
+prod$percent.prod<-percent.prod
+
+
+#plots of taxa-specific production by year
+cyclopoid.data<-prod[prod$taxa=='cyclopoid',]
+ggplot(data=cyclopoid.data,aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
+
+daphnia.data<-prod[prod$taxa=='daphnia',]
+ggplot(data=daphnia.data, aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
+
+holopedium.data<-prod[prod$taxa=='holopedium',]
+ggplot(data=holopedium.data, aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
+
+el.data<-prod[prod$lakeID=='EL',]
+ggplot(data=el.data, aes(x=year,y=percent.prod,fill=taxa))+geom_bar(stat='identity')
+
+plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0.1,0.6),pch=19,cex=1.3,col='brown',ylab='% production',xlab='year',xaxt='n')
+points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=1,cex=1.3,col='blue')
+points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')
+points(prod$year[prod$lakeID=='WL' & prod$taxa=='daphnia'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=0,cex=1.3,col='blue')
+points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='brown')
+points(prod$year[prod$lakeID=='WL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=2,cex=1.3,col='blue')
+axis(1,at=c(2011,2012,2013,2014))
+
+
+#RIA on chaobs
+#load chaoborus data
+setwd('~/Documents/Notre Dame//long lake data/Chaoborus data')
+chaobs<-read.csv('chaoborusDataLongLake2011-2014.csv')
+
+#add year
+chaobs$year<-format(as.Date(chaobs$dateSample,'%m/%d/%y'),'%Y')
+boxplot(chaobs$g.m2~chaobs$lakeID*chaobs$year,col=rep(c('brown','blue'),4))

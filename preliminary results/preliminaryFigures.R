@@ -74,4 +74,6 @@ ggplot(data=prod.holopedium, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_
 tot.prod<-aggregate(prod$production.g.m2.yr,by=list(prod$lakeID,prod$year),sum,na.rm=T) 
 colnames(tot.prod)<-c('lakeID','year','production.g.m2.yr')
 
+#cyclopoid
+cyclopoid.data<-prod[prod$taxa=='cyclopoid',]
 ggplot(data=tot.prod,aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
