@@ -58,9 +58,170 @@ iso.data$fracAlgae<-fracAlgae
 
 #calculate d13C and d15N of algae from linear mixing model
 tPOC_C<--24.401 #Taken from IRMS sample of tPOC dog buckets by Zwart
-tPOC_N<--3.303 #ditto
+tPOC_N<--4.6 #ditto
 iso.data$d13Calgae<-(iso.data$d13C-(1-iso.data$fracAlgae)*-tPOC_C)/iso.data$fracAlgae #these all seem way too depleted, but I'll go with it
 iso.data$d15Nalgae<-(iso.data$d15N-(1-iso.data$fracAlgae)*-tPOC_N)/iso.data$fracAlgae
 
+#use only PML isotopes
+iso.pml<-iso.data[iso.data$depthClass=='PML',]
+
+#remove NAs
+iso.pml<-iso.pml[!is.na(iso.pml$d13Calgae),]
+
+#remove outliers so it makes more sense - some values way too negative
+#get interquartile range for dC13algae for east and west seperately <- this should probably be done by year, but we'll start with this for now
+el.lowerq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='EL'],na.rm=T)[2]
+el.upperq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='EL'],na.rm=T)[3]
+el.iqr<-el.upperq-el.lowerq
+
+wl.lowerq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='WL'],na.rm=T)[2]
+wl.upperq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='WL'],na.rm=T)[3]
+wl.iqr<-wl.upperq-wl.lowerq
+
+#compute the bounds for a mild outlier
+el.mild.threshold.upper<-(el.iqr*1.5)+el.upperq
+el.mild.threshold.lower<-el.lowerq-(el.iqr*1.5)
+wl.mild.threshold.upper<-(wl.iqr*1.5)+wl.upperq
+wl.mild.threshold.lower<-wl.lowerq-(wl.iqr*1.5)
+
+#remove outliers
+iso.pml<-iso.pml[(iso.pml$lakeID=='EL' & iso.pml$d13Calgae>el.mild.threshold.lower & iso.pml$d13Calgae<el.mild.threshold.upper) | (iso.pml$lakeID=='WL' & iso.pml$d13Calgae>wl.mild.threshold.lower & iso.pml$d13Calgae<wl.mild.threshold.upper),]
+
+#add year to make it easier
+iso.pml$year<-format(as.Date(iso.pml$dateSample,'%m/%d/%Y'),'%Y')
+
 #get zooplankton data
-dbListFields(con,'ISOTOPE_SAMPLES_ZOOPS')
+zoop.2011<-read.csv('2011zoopIsotopes.csv')
+zoop.2012<-read.csv('2012zoopIsotopes.csv')
+el.zoop.2012<-read.csv('EastLongZoopIsotops2012.csv')
+
+#need to add ID numbers to el.zoop.2012 starting at Z-0371
+num<-0371:0391
+IDs<-paste('Z-0',num,sep='')
+el.zoop.2012<-cbind(isotopeID=IDs[-length(IDs)],el.zoop.2012)
+
+#combine two data frames
+zoop.pre<-rbind(zoop.2011,zoop.2012)
+
+#add zooplankton data
+d13C<-c()
+d15N<-c()
+for(i in 1:nrow(zoop.pre)){
+	rowi<-match(zoop.pre$isotopeID[i],results$isotopeID)
+	d13C[i]<-results$d13C[rowi]
+	d15N[i]<-results$d15N[rowi]
+}
+zoop.pre$d13C<-d13C
+zoop.pre$d15N<-d15N
+
+#remove 0s and NAs
+zoop.pre<-zoop.pre[!is.na(zoop.pre$d13C) & zoop.pre$d13C!=0,]
+
+#fix dates on el 2012 data
+el.zoop.2012$dateSample<-format(as.Date(el.zoop.2012$dateSample,'%m/%d/%y'),'%m/%d/%Y')
+
+#remove flag column
+zoop.pre<-zoop.pre[,-5]
+
+#combine data
+zoop.pre<-rbind(zoop.pre,el.zoop.2012)
+
+#load 2013 and 2014 data
+zoop.2013<-read.csv('LOzoops2013.csv')
+log.2013<-read.csv('IsotopeLog2013.csv')
+zoop.2014<-read.csv('LOzoops2014.csv')
+zoop.2014<-zoop.2014[-c(1,4),]
+log.2014<-read.csv('IsotopeLog2014.csv')
+
+#fix zoop.2013 IDs
+end<-strsplit(zoop.2013$ID1,split='Z')
+newID<-c()
+for(i in 1:length(end)){
+	newID[i]=paste('Z-',end[[i]][2],sep='')
+}
+zoop.2013$ID1=newID
+
+#make one big data frae of post samples
+zoop.2013<-rbind(zoop.2013,zoop.2014)
+
+
+#make zoop.post with log and zoop data
+zoop.post<-c()
+for(i in 1:nrow(zoop.2013)){
+	rowi<-match(zoop.2013$ID1[i],log.2013$Isotope.ID)
+	if(!is.na(rowi)){
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2013$Lake.ID[rowi],dateSample=format(as.Date(log.2013$Date.time[rowi],'%m/%d/%y %H:%M'),'%m/%d/%Y'),taxa=log.2013$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])
+	}
+	if(is.na(rowi)){
+		rowi<-match(zoop.2013$ID1[i],log.2014$Isotope.ID)
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2014$Lake.ID[rowi],dateSample=format(as.Date(log.2014$Date.Sample[rowi],'%m/%d/%Y'),'%m/%d/%Y'),taxa=log.2014$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])
+	}
+	zoop.post=rbind(zoop.post,x)
+}
+
+#combine zoop pre and post
+iso.zoop<-rbind(zoop.pre,zoop.post)
+
+#use only East and West Long
+iso.zoop<-iso.zoop[iso.zoop$lakeID=='EL' | iso.zoop$lakeID=='WL',]
+#add year for ease of use
+iso.zoop$year<-format(as.Date(iso.zoop$dateSample,'%m/%d/%Y'),'%Y')
+
+
+#write function to get end members -> Cphyt, Nphyt, Cterr, Nterr, Cmeth, Nmeth
+endMember<-function(lakeID,year){
+	algaeC<-mean(iso.pml$d13Calgae[iso.pml$lakeID==lakeID & iso.pml$year==year])
+	algaeN<-mean(iso.pml$d15Nalgae[iso.pml$lakeID==lakeID & iso.pml$year==year])
+	return(c(Cphyto=algaeC,Nphyto=algaeN,Cterr=-24.401,Nterr=-3.303,Cmeth=-60,Nmeth=algaeN))
+}
+
+#linear mixing model to get reosurce reliance, need to make sure to adjust N numbers for trophic fractionation
+linearMM<-function(Em,zoopC, zoopN){
+	fPhyto<-((Em[6]-Em[4])*(zoopC-Em[3])-(Em[5]-Em[3])*(zoopN-Em[4]))/((Em[6]-Em[4])*(Em[1]-Em[3])-(Em[5]-Em[3])*(Em[2]-Em[4]))
+	fTerr<-((zoopC-Em[5])-(Em[1]-Em[5])*fPhyto)/(Em[3]-Em[5])
+	fCH4<-1-fPhyto-fTerr
+	out<-c(fPhyto=fPhyto,fTerr=fTerr,fCH4=fCH4)
+	return(out)
+}
+
+#trophic fractionation ->use 2 for all zooplankton, 3 for Chaoborus...TLfrac=somewhere between 2.5 and 3.1
+TLfrac=2.5
+
+resource.reliance<-c()
+for(i in 1:nrow(iso.zoop)){
+	if(iso.zoop$taxa[i]=='chaoborus'){
+		TL=3
+	}
+	else if(iso.zoop$taxa[i]!='chaoborus'){
+		TL=2
+	}
+	em<-endMember(lakeID=iso.zoop$lakeID[i],year=iso.zoop$year[i])
+	zoopC<-iso.zoop$d13C[i]
+	zoopN<-iso.zoop$d15N[i]-TL*TLfrac
+	out<-linearMM(Em=em,zoopC=zoopC,zoopN=zoopN)
+	resource.reliance<-rbind(resource.reliance,out)
+}
+colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')
+
+#add resource reliance to iso.zoop
+zoop.rr<-cbind(iso.zoop,resource.reliance)
+
+#fix names
+zoop.rr$taxa<-tolower(zoop.rr$taxa)
+zoop.rr$taxa[zoop.rr$taxa=='zoops']='all zoops'
+
+
+#Write function to make bi-plot that shows phyt, terrm and methane, as well as a taxa of consumers
+biPlot<-function(lake, year, taxa){
+	end.member<-endMember(lake,year)
+	zoops<-zoop.rr[zoop.rr$lakeID==lake & zoop.rr$taxa==taxa & zoop.rr$year==year,]
+	quartz()
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')
+	points(zoops$d13C,zoops$d15N-(TLfrac*2),pch=15,col='blue')
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))
+}
