@@ -9,6 +9,9 @@ zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')
 #use only Long data
 zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]
 
+#add biomass_g_m2
+zoop.data$biomass_g_m2<-zoop.data$biomass_gDryMass_m3*zoop.data$depthBottom
+
 #match samples by date east and west
 #make unique ID that is date-taxa
 zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='_')
@@ -51,13 +54,13 @@ RIA<-function(pre1,pre2,post1,post2,n.iter=1000){
 }
 
 #Cyclopoids
-RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & EL.data$year==2011 | EL.data$year==2012],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2011 | EL.data$year==2012],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & EL.data$year==2013 | EL.data$year==2014], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2013 | EL.data$year==2014])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)])
 
 #Daphnia
-RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & EL.data$year==2011 | EL.data$year==2012],pre2=EL.data$WL.biomass[EL.data$taxa=='daphnia' & EL.data$year==2011 | EL.data$year==2012],post1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & EL.data$year==2013 | EL.data$year==2014], post2=EL.data$WL.biomass[EL.data$taxa=='daphnia' & EL.data$year==2013 | EL.data$year==2014])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='daphnia' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='daphnia' & (EL.data$year==2013 | EL.data$year==2014)])
 
 #Holopedium
-RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & EL.data$year==2011 | EL.data$year==2012],pre2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & EL.data$year==2011 | EL.data$year==2012],post1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & EL.data$year==2013 | EL.data$year==2014], post2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & EL.data$year==2013 | EL.data$year==2014])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & (EL.data$year==2013 | EL.data$year==2014)])
 
 
 #Calculate zooplankton production using Plante and Downing equation
