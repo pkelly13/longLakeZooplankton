@@ -11,6 +11,9 @@ zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]
 #make areal biomass column
 zoops$biomass_gDryMass_m2<-(zoops$abundance_num_m3*zoops$depthBottom)*(zoops$meanMass_ug/1000000)
 
+#fix zoop dates
+zoops$dateSample<-format(as.Date(zoops$dateSample,'%m/%d/%y'),'%Y-%m-%d')
+
 #make uniqueID to match samples together
 zoops$uniqueID<-paste(zoops$lakeID,zoops$dateSample,sep='.')
 
@@ -77,6 +80,7 @@ stoich$uniqueID<-paste(stoich$lakeID,stoich$dateSample,sep='.')
 #Get temperature data
 temp<-read.csv('epiTemp2011-2014.csv')
 temp$uniqueID<-paste(temp$lakeID,temp$dateSample,sep='.')
+
 
 cov.mat<-c()
 for(i in 1:nrow(zoop.data)){

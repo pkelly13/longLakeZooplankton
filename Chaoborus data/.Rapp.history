@@ -1,0 +1,653 @@
+B0
+Z.simple.cyclopoid<-cbind(B0,Yt.cyclopoid)
+Z.simple.cyclopoid
+D.simple.cyclopoid<-solve(t(Z.simple.cyclopoid)%*%Z.simple.cyclopoid)%*%t(Z.simple.cyclopoid)%*%Ytplus1.cyclopoid
+D.simple.cyclopoid
+predict.simple.cyclopoid<-Z.simple.cyclopoid%*%D.simple.cyclopoid
+predict.simple.cyclopoid
+predict.simple.cyclopoid<-Z.simple.cyclopoid%*%D.simple.cyclopoid#
+#
+Q<-nrow(Yt.cyclopoid) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.simple.cyclopoid-Ytplus1.cyclopoid#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.cyclopoid<-(2*1)-(2*lnlike)
+AIC.cyclopoid
+#holopedium#
+B0<-rep(1, nrow(Yt.holopedium))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.holopedium<-cbind(B0,Yt.holopedium)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.holopedium<-solve(t(Z.simple.holopedium)%*%Z.simple.holopedium)%*%t(Z.simple.holopedium)%*%Ytplus1.holopedium#
+#
+#calculate predicted#
+predict.simple.holopedium<-Z.simple.holopedium%*%D.simple.holopedium#
+#
+Q<-nrow(Yt.holopedium) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.simple.holopedium-Ytplus1.holopedium#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.holopedium<-(2*1)-(2*lnlike)
+AIC.holopedium
+mi
+Mi
+Yt.daphnia<-Yt[!is.na(Yt$daphnia),c(1,2,5)]#
+Yt.cyclopoid<-Yt[!is.na(Yt$cyclopoid),c(1,3,5)]#
+Yt.holopedium<-Yt[!is.na(Yt$holopedium),c(1,4,5)]#
+#
+Ytplus1.daphnia<-Ytplus1[!is.na(Ytplus1$daphnia),c(1,2,5)]#
+Ytplus1.cyclopoid<-Ytplus1[!is.na(Ytplus1$cyclopoid),c(1,3,5)]#
+Ytplus1.holopedium<-Ytplus1[!is.na(Ytplus1$holopedium),c(1,4,5)]#
+#
+#remove transition year#
+Yt.year<-Yt.daphnia$year#
+Ytplus1.year<-Ytplus1.daphnia$year#
+Yt.daphnia<-as.matrix(Yt.daphnia[Yt.year==Ytplus1.year,2])#
+Ytplus1.daphnia<-as.matrix(Ytplus1.daphnia[Yt.year==Ytplus1.year,2])#
+Mi.daphnia<-Mi[Yt.year==Ytplus1.year]
+Mi.daphnia
+length(Yt.daphnia)
+length(Mi)
+length(Mi.daphnia)
+length(Ytplus1.daphnia)
+Yt.daphnia
+Yt.daphnia<-Yt[!is.na(Yt$daphnia),c(1,2,5)]#
+Yt.cyclopoid<-Yt[!is.na(Yt$cyclopoid),c(1,3,5)]#
+Yt.holopedium<-Yt[!is.na(Yt$holopedium),c(1,4,5)]#
+#
+Ytplus1.daphnia<-Ytplus1[!is.na(Ytplus1$daphnia),c(1,2,5)]#
+Ytplus1.cyclopoid<-Ytplus1[!is.na(Ytplus1$cyclopoid),c(1,3,5)]#
+Ytplus1.holopedium<-Ytplus1[!is.na(Ytplus1$holopedium),c(1,4,5)]
+Yt.daphnia
+Mi.daphnia<-rep(0,nrow(Yt.daphnia))
+Mi.daphnia
+Mi.daphnia[Yt.daphnia$year==2013 | Yt.daphnia$year==2014]=1
+Mi.daphnia
+Mi.cyclopoid<-rep(0,nrow(Yt.cyclopoid))
+Mi.cyclopoid<-rep(0,nrow(Yt.cyclopoid))#
+Mi.cyclopoid[Yt.cyclopoid$year==2013 | Yt.cyclopoid$year==2014]=1#
+Mi.holopedium<-rep(0,nrow(Yt.holopedium))#
+Mi.holopedium[Yt.holopedium$year==2013|Yt.holopedium$year==2014]=1
+Mi.holopedium
+#remove transition year#
+Yt.year<-Yt.daphnia$year#
+Ytplus1.year<-Ytplus1.daphnia$year#
+Yt.daphnia<-as.matrix(Yt.daphnia[Yt.year==Ytplus1.year,2])#
+Ytplus1.daphnia<-as.matrix(Ytplus1.daphnia[Yt.year==Ytplus1.year,2])#
+#
+Yt.year<-Yt.cyclopoid$year#
+Ytplus1.year<-Ytplus1.cyclopoid$year#
+Yt.cyclopoid<-as.matrix(Yt.cyclopoid[Yt.year==Ytplus1.year,2])#
+Ytplus1.cyclopoid<-as.matrix(Ytplus1.cyclopoid[Yt.year==Ytplus1.year,2])#
+#
+Yt.year<-Yt.holopedium$year#
+Ytplus1.year<-Ytplus1.holopedium$year#
+Yt.holopedium<-as.matrix(Yt.holopedium[Yt.year==Ytplus1.year,2])#
+Ytplus1.holopedium<-as.matrix(Ytplus1.holopedium[Yt.year==Ytplus1.year,2])
+#Start with simple model for each taxa ->use only the intercept#
+#make vector of 1s for intercept#
+B0<-rep(1, nrow(Yt.daphnia))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.daphnia<-cbind(B0,Yt.daphnia)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.daphnia<-solve(t(Z.simple.daphnia)%*%Z.simple.daphnia)%*%t(Z.simple.daphnia)%*%Ytplus1.daphnia#
+#
+#calculate predicted#
+predict.simple.daphnia<-Z.simple.daphnia%*%D.simple.daphnia#
+#
+Q<-nrow(Yt.daphnia) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.simple.daphnia-Ytplus1.daphnia#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.daphnia<-(2*1)-(2*lnlike)
+AIC.daphnia
+#cyclopoid#
+B0<-rep(1, nrow(Yt.cyclopoid))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.cyclopoid<-cbind(B0,Yt.cyclopoid)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.cyclopoid<-solve(t(Z.simple.cyclopoid)%*%Z.simple.cyclopoid)%*%t(Z.simple.cyclopoid)%*%Ytplus1.cyclopoid#
+#
+#calculate predicted#
+predict.simple.cyclopoid<-Z.simple.cyclopoid%*%D.simple.cyclopoid#
+#
+Q<-nrow(Yt.cyclopoid) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Cyclopoid#
+E<-predict.simple.cyclopoid-Ytplus1.cyclopoid#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.cyclopoid<-(2*1)-(2*lnlike)
+AIC.cyclopoid
+#holopedium#
+B0<-rep(1, nrow(Yt.holopedium))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.holopedium<-cbind(B0,Yt.holopedium)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.holopedium<-solve(t(Z.simple.holopedium)%*%Z.simple.holopedium)%*%t(Z.simple.holopedium)%*%Ytplus1.holopedium#
+#
+#calculate predicted#
+predict.simple.holopedium<-Z.simple.holopedium%*%D.simple.holopedium#
+#
+Q<-nrow(Yt.holopedium) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Holopedium#
+E<-predict.simple.holopedium-Ytplus1.holopedium#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.holopedium<-(2*1)-(2*lnlike)
+Z.mi.daphnia<-cbind(B0,Yt.daphnia,mi.daphnia)
+Z.mi.daphnia<-cbind(B0,Yt.daphnia,Mi.daphnia)
+nrow(Mi.daphnia)
+length(Mi.daphnia)
+length(Yt.daphnia)
+#remove NAs -> need to do all of this for each taxa#
+Yt.daphnia<-Yt[!is.na(Yt$daphnia),c(1,2,5)]#
+Yt.cyclopoid<-Yt[!is.na(Yt$cyclopoid),c(1,3,5)]#
+Yt.holopedium<-Yt[!is.na(Yt$holopedium),c(1,4,5)]#
+#
+Ytplus1.daphnia<-Ytplus1[!is.na(Ytplus1$daphnia),c(1,2,5)]#
+Ytplus1.cyclopoid<-Ytplus1[!is.na(Ytplus1$cyclopoid),c(1,3,5)]#
+Ytplus1.holopedium<-Ytplus1[!is.na(Ytplus1$holopedium),c(1,4,5)]#
+#
+Mi.daphnia<-rep(0,nrow(Yt.daphnia))#
+Mi.daphnia[Yt.daphnia$year==2013 | Yt.daphnia$year==2014]=1#
+Mi.cyclopoid<-rep(0,nrow(Yt.cyclopoid))#
+Mi.cyclopoid[Yt.cyclopoid$year==2013 | Yt.cyclopoid$year==2014]=1#
+Mi.holopedium<-rep(0,nrow(Yt.holopedium))#
+Mi.holopedium[Yt.holopedium$year==2013|Yt.holopedium$year==2014]=1#
+#
+#remove transition year#
+Yt.year<-Yt.daphnia$year#
+Ytplus1.year<-Ytplus1.daphnia$year#
+Yt.daphnia<-as.matrix(Yt.daphnia[Yt.year==Ytplus1.year,2])#
+Ytplus1.daphnia<-as.matrix(Ytplus1.daphnia[Yt.year==Ytplus1.year,2])#
+Mi.daphnia<-Mi.daphnia[Yt.year==Ytplus1.year]#
+#
+Yt.year<-Yt.cyclopoid$year#
+Ytplus1.year<-Ytplus1.cyclopoid$year#
+Yt.cyclopoid<-as.matrix(Yt.cyclopoid[Yt.year==Ytplus1.year,2])#
+Ytplus1.cyclopoid<-as.matrix(Ytplus1.cyclopoid[Yt.year==Ytplus1.year,2])#
+Mi.cyclopoid<-Mi.cyclopoid[Yt.year==Ytplus1.year]#
+#
+Yt.year<-Yt.holopedium$year#
+Ytplus1.year<-Ytplus1.holopedium$year#
+Yt.holopedium<-as.matrix(Yt.holopedium[Yt.year==Ytplus1.year,2])#
+Ytplus1.holopedium<-as.matrix(Ytplus1.holopedium[Yt.year==Ytplus1.year,2])#
+Mi.holopedium<-Mi.holopedium[Yt.year==Ytplus1.year]
+length(Mi.daphnia)
+B0<-rep(1,nrow(Yt.daphnia))#
+#
+#model with dummy variables#
+Z.mi.daphnia<-cbind(B0,Yt.daphnia,Mi.daphnia)
+Z.mi.daphnia
+D.mi.daphnia<-solve(t(Z.mi.daphnia)%*%Z.mi.daphnia)%*%t(Z.mi.daphnia)%*%Ytplus1.daphnia
+D.mi.daphnia
+predict.mi.daphnia<-Z.mi.daphnia%*%D.mi.daphnia
+#calculate predicted#
+predict.mi.daphnia<-Z.mi.daphnia%*%D.mi.daphnia#
+#
+Q<-nrow(Yt.daphnia) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.mi.daphnia-Ytplus1.daphnia#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.mi.daphnia<-(2*1)-(2*lnlike)
+AIC.mi.daphnia
+AIC.daphnia
+B0<-rep(1,nrow(Yt.cyclopoid))
+Z.mi.cyclopoid<-cbind(B0,Yt.cyclopoid,Mi.cyclopoid)
+Z.mi.cyclopoid
+D.mi.cyclopoid<-solve(t(Z.mi.cyclopoid)%*%Z.mi.cyclopoid)%*%t(Z.mi.cyclopoid)%*%Ytplus1.cyclopoid
+D.mi.cyclopoid
+predict.mi.cyclopoid<-Z.mi.cyclopoid%*%D.mi.cyclopoid
+Q<-nrow(Yt.cyclopoid) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.mi.cyclopoid-Ytplus1.cyclopoid#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.mi.cyclopoid<-(2*1)-(2*lnlike)
+AIC.mi.cyclopoid
+B0<-rep(1, nrow(Yt.daphnia))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.daphnia<-cbind(B0,Yt.daphnia)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.daphnia<-solve(t(Z.simple.daphnia)%*%Z.simple.daphnia)%*%t(Z.simple.daphnia)%*%Ytplus1.daphnia#
+#
+#calculate predicted#
+predict.simple.daphnia<-Z.simple.daphnia%*%D.simple.daphnia#
+#
+Q<-nrow(Yt.daphnia) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.simple.daphnia-Ytplus1.daphnia#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.daphnia<-(2*2)-(2*lnlike)
+AIC.daphnia
+#cyclopoid#
+B0<-rep(1, nrow(Yt.cyclopoid))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.cyclopoid<-cbind(B0,Yt.cyclopoid)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.cyclopoid<-solve(t(Z.simple.cyclopoid)%*%Z.simple.cyclopoid)%*%t(Z.simple.cyclopoid)%*%Ytplus1.cyclopoid#
+#
+#calculate predicted#
+predict.simple.cyclopoid<-Z.simple.cyclopoid%*%D.simple.cyclopoid#
+#
+Q<-nrow(Yt.cyclopoid) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Cyclopoid#
+E<-predict.simple.cyclopoid-Ytplus1.cyclopoid#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.cyclopoid<-(2*2)-(2*lnlike)
+AIC.cyclopoid
+#holopedium#
+B0<-rep(1, nrow(Yt.holopedium))#
+#
+#Try model with just the intercept and the autrogressive parameter#
+Z.simple.holopedium<-cbind(B0,Yt.holopedium)#
+#
+#estimate parameters using CLS (copied this from MAR)#
+D.simple.holopedium<-solve(t(Z.simple.holopedium)%*%Z.simple.holopedium)%*%t(Z.simple.holopedium)%*%Ytplus1.holopedium#
+#
+#calculate predicted#
+predict.simple.holopedium<-Z.simple.holopedium%*%D.simple.holopedium#
+#
+Q<-nrow(Yt.holopedium) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Holopedium#
+E<-predict.simple.holopedium-Ytplus1.holopedium#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.holopedium<-(2*2)-(2*lnlike)
+B0<-rep(1,nrow(Yt.daphnia))#
+#
+#model with dummy variables#
+Z.mi.daphnia<-cbind(B0,Yt.daphnia,Mi.daphnia)#
+#
+D.mi.daphnia<-solve(t(Z.mi.daphnia)%*%Z.mi.daphnia)%*%t(Z.mi.daphnia)%*%Ytplus1.daphnia#
+#
+#calculate predicted#
+predict.mi.daphnia<-Z.mi.daphnia%*%D.mi.daphnia#
+#
+Q<-nrow(Yt.daphnia) #length of time series#
+P<-1 #number of species#
+R<-1 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.mi.daphnia-Ytplus1.daphnia#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.mi.daphnia<-(2*3)-(2*lnlike)
+AIC.mi.daphnia
+AIC.daphnia
+B0<-rep(1,nrow(Yt.cyclopoid))#
+#
+#model with dummy variables#
+Z.mi.cyclopoid<-cbind(B0,Yt.cyclopoid,Mi.cyclopoid)#
+#
+D.mi.cyclopoid<-solve(t(Z.mi.cyclopoid)%*%Z.mi.cyclopoid)%*%t(Z.mi.cyclopoid)%*%Ytplus1.cyclopoid#
+#
+#calculate predicted#
+predict.mi.cyclopoid<-Z.mi.cyclopoid%*%D.mi.cyclopoid#
+#
+Q<-nrow(Yt.cyclopoid) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Daphnia#
+E<-predict.mi.cyclopoid-Ytplus1.cyclopoid#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.mi.cyclopoid<-(2*3)-(2*lnlike)
+AIC.mi.cyclopoid
+AIC.cyclopoid
+B0<-rep(1,nrow(Yt.holopedium))#
+#
+#model with dummy variables#
+Z.mi.holopedium<-cbind(B0,Yt.holopedium,Mi.holopedium)#
+#
+D.mi.holopedium<-solve(t(Z.mi.holopedium)%*%Z.mi.holopedium)%*%t(Z.mi.holopedium)%*%Ytplus1.holopedium#
+#
+#calculate predicted#
+predict.mi.holopedium<-Z.mi.holopedium%*%D.mi.holopedium#
+#
+Q<-nrow(Yt.holopedium) #length of time series#
+P<-1 #number of species#
+R<-0 #number of covariates#
+#
+#AIC for Cyclopoid#
+E<-predict.mi.holopedium-Ytplus1.holopedium#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+AIC.mi.holopedium<-(2*3)-(2*lnlike)
+AIC.mi.holopedium
+AIC.holopedium
+#load data#
+setwd('~/Documents/Notre Dame/Long Lake Data/preliminary results')#
+#
+zoop.data<-read.csv('zoopData2011_2014.csv')#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')#
+#use only Long data#
+zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]#
+#
+#match samples by date east and west#
+#make unique ID that is date-taxa#
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='_')#
+EL.data<-zoop.data[zoop.data$lakeID=='EL',]#
+WL.data<-zoop.data[zoop.data$lakeID=='WL',]#
+#
+WL.biomass<-c()#
+for(i in 1:nrow(EL.data)){#
+	rowi<-match(EL.data$uniqueID[i],WL.data$uniqueID)#
+	WL.biomass[i]<-WL.data$biomass_g_m2[rowi]#
+}#
+EL.data$WL.biomass<-WL.biomass#
+#
+#plots of differences in biomass (g m-2) though time#
+plot(as.Date(EL.data$dateSample[EL.data$taxa=='cyclopoid'],'%Y-%m-%d'),EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid']-EL.data$WL.biomass[EL.data$taxa=='cyclopoid'],ylab='EL cyclopoid biomass - WL cyclopoid biomass',xlab='Date')#
+abline(lm((EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid']-EL.data$WL.biomass[EL.data$taxa=='cyclopoid'])~as.Date(EL.data$dateSample[EL.data$taxa=='cyclopoid'],'%Y-%m-%d')))#
+#
+quartz()#
+plot(as.Date(EL.data$dateSample[EL.data$taxa=='daphnia'],'%Y-%m-%d'),EL.data$biomass_g_m2[EL.data$taxa=='daphnia']-EL.data$WL.biomass[EL.data$taxa=='daphnia'],ylab='EL daphnia biomass - WL daphnia biomass',xlab='Date')#
+abline(lm((EL.data$biomass_g_m2[EL.data$taxa=='daphnia']-EL.data$WL.biomass[EL.data$taxa=='daphnia'])~as.Date(EL.data$dateSample[EL.data$taxa=='daphnia'],'%Y-%m-%d')))#
+#
+quartz()#
+plot(as.Date(EL.data$dateSample[EL.data$taxa=='holopedium'],'%Y-%m-%d'),EL.data$biomass_g_m2[EL.data$taxa=='holopedium']-EL.data$WL.biomass[EL.data$taxa=='holopedium'],ylab='EL holopedium biomass - WL holopedium biomass',xlab='Date')#
+abline(lm((EL.data$biomass_g_m2[EL.data$taxa=='holopedium']-EL.data$WL.biomass[EL.data$taxa=='holopedium'])~as.Date(EL.data$dateSample[EL.data$taxa=='holopedium'],'%Y-%m-%d')))#
+#
+#RIA#
+RIA<-function(pre1,pre2,post1,post2,n.iter=1000){#
+	# test statistic calculation#
+	statistic=abs(mean(pre1-pre2,na.rm=T)-mean(post1-post2,na.rm=T))#
+	non.abs.statistic=mean(pre1-pre2,na.rm=T)-mean(post1-post2,na.rm=T)#
+	# permutation#
+	rand_statistic=numeric(n.iter)#
+	for(i in 1:n.iter){#
+		tmp1=sample(c(pre1,post1),length(pre1)+length(post1),replace=FALSE)#
+		tmp2=sample(c(pre1,post1),length(pre1)+length(post1),replace=FALSE)#
+		rand_statistic[i]=abs(mean(tmp1[1:length(pre1)]-tmp2[1:length(pre2)])-mean(tmp1[(length(pre1)+1):length(tmp1)]-tmp2[(length(pre2)+1):length(tmp2)]))#
+	}#
+	return(list(statistic=statistic,non.abs.statistic=non.abs.statistic,randomizations=rand_statistic,p=sum(rand_statistic>statistic)/n.iter))#
+}
+EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & EL.data$year==2011 | EL.data$year==2012]
+head(EL.data)
+EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)]
+zoop.data$biomass_gDryMass_m3
+zoop.data$biomass_g_m2<-zoop.data$biomass_gDryMass_m3*zoop.data$depthTop
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='_')#
+EL.data<-zoop.data[zoop.data$lakeID=='EL',]#
+WL.data<-zoop.data[zoop.data$lakeID=='WL',]
+WL.biomass<-c()#
+for(i in 1:nrow(EL.data)){#
+	rowi<-match(EL.data$uniqueID[i],WL.data$uniqueID)#
+	WL.biomass[i]<-WL.data$biomass_g_m2[rowi]#
+}#
+EL.data$WL.biomass<-WL.biomass
+plot(as.Date(EL.data$dateSample[EL.data$taxa=='cyclopoid'],'%Y-%m-%d'),EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid']-EL.data$WL.biomass[EL.data$taxa=='cyclopoid'],ylab='EL cyclopoid biomass - WL cyclopoid biomass',xlab='Date')#
+abline(lm((EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid']-EL.data$WL.biomass[EL.data$taxa=='cyclopoid'])~as.Date(EL.data$dateSample[EL.data$taxa=='cyclopoid'],'%Y-%m-%d')))
+EL.data
+head(EL.data)
+i=1
+rowi<-match(EL.data$uniqueID[i],WL.data$uniqueID)
+rowi
+WL.data$biomass_g_m2[rowi]
+head(WL.data)
+#add biomass_g_m2#
+zoop.data$biomass_g_m2<-zoop.data$biomass_gDryMass_m3*zoop.data$depthBottom#
+#
+#match samples by date east and west#
+#make unique ID that is date-taxa#
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='_')#
+EL.data<-zoop.data[zoop.data$lakeID=='EL',]#
+WL.data<-zoop.data[zoop.data$lakeID=='WL',]#
+#
+WL.biomass<-c()#
+for(i in 1:nrow(EL.data)){#
+	rowi<-match(EL.data$uniqueID[i],WL.data$uniqueID)#
+	WL.biomass[i]<-WL.data$biomass_g_m2[rowi]#
+}#
+EL.data$WL.biomass<-WL.biomass#
+#
+#plots of differences in biomass (g m-2) though time#
+plot(as.Date(EL.data$dateSample[EL.data$taxa=='cyclopoid'],'%Y-%m-%d'),EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid']-EL.data$WL.biomass[EL.data$taxa=='cyclopoid'],ylab='EL cyclopoid biomass - WL cyclopoid biomass',xlab='Date')#
+abline(lm((EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid']-EL.data$WL.biomass[EL.data$taxa=='cyclopoid'])~as.Date(EL.data$dateSample[EL.data$taxa=='cyclopoid'],'%Y-%m-%d')))
+#RIA#
+RIA<-function(pre1,pre2,post1,post2,n.iter=1000){#
+	# test statistic calculation#
+	statistic=abs(mean(pre1-pre2,na.rm=T)-mean(post1-post2,na.rm=T))#
+	non.abs.statistic=mean(pre1-pre2,na.rm=T)-mean(post1-post2,na.rm=T)#
+	# permutation#
+	rand_statistic=numeric(n.iter)#
+	for(i in 1:n.iter){#
+		tmp1=sample(c(pre1,post1),length(pre1)+length(post1),replace=FALSE)#
+		tmp2=sample(c(pre1,post1),length(pre1)+length(post1),replace=FALSE)#
+		rand_statistic[i]=abs(mean(tmp1[1:length(pre1)]-tmp2[1:length(pre2)])-mean(tmp1[(length(pre1)+1):length(tmp1)]-tmp2[(length(pre2)+1):length(tmp2)]))#
+	}#
+	return(list(statistic=statistic,non.abs.statistic=non.abs.statistic,randomizations=rand_statistic,p=sum(rand_statistic>statistic)/n.iter))#
+}
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2011 | EL.data$year==2012],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & EL.data$year==2013 | EL.data$year==2014], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2013 | EL.data$year==2014])
+warnings()
+EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)]
+EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2011 | EL.data$year==2012]
+pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)]
+pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2011 | EL.data$year==2012]
+post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & EL.data$year==2013 | EL.data$year==2014]
+post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & EL.data$year==2013 | EL.data$year==2014]
+n.iter=1000
+statistic=abs(mean(pre1-pre2,na.rm=T)-mean(post1-post2,na.rm=T))
+statistic
+pre1-pre2
+length(pre1)
+length(pre2)
+pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)]
+length(pre2)
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014]))
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014]))
+pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)]
+pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)]
+post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)]
+post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='daphnia' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='daphnia' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='daphnia' & (EL.data$year==2013 | EL.data$year==2014)])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='holopedium' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='holopedium' & (EL.data$year==2013 | EL.data$year==2014)])
+RIA(pre1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],pre2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2011 | EL.data$year==2012)],post1=EL.data$biomass_g_m2[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)], post2=EL.data$WL.biomass[EL.data$taxa=='cyclopoid' & (EL.data$year==2013 | EL.data$year==2014)])
+setwd('~/Documents/useful R scripts')
+list.files()
+source('RIA.R')
+setwd('~/Documents/Notre Dame/long lake data')
+list.files()
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
+list.files()
+zoop.data<-read.csv('zoopData2011_2014.csv')
+zoopdata
+zoop.data
+head(zoop.data)
+zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]
+head(zoop.data)
+zoop.data$biomass_g_m2<-zoop.data$biomass_gDryMass_m3*zoop.data$depthBottom
+head(zoop.data)
+zoop.data$biomass_g_m2<-(zoop.data$abundance_num_m3*zoop.data$depthBottom)*(zoop.data$meanMass_ug/1000000)
+head(zoop.data)
+head(addYear(zoop.data))
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')
+head(zoop.data)
+unique(zoop.data$year)
+zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)]
+zoop.data[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012),]
+RIA(pre1=zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)])
+zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)]
+zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)]
+RIA(pre1=zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)])
+pre1=zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)]
+pre2=zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)]
+length(pre1)
+length(pre2)
+post1=zoop.data$biomass_g_m2[zoop.data$lakeID=='EL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)]
+post1
+post2=zoop.data$biomass_g_m2[zoop.data$lakeID=='WL' & zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)]
+length(post1)
+length(post2)
+head(zoop.data)
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa)
+head(zoop.data)
+el.data<-zoop.data[zoop.data$lakeID=='EL',]
+wl.data<-zoop.data[zoop.data$lakeID=='WL',]
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='.')
+el.data<-zoop.data[zoop.data$lakeID=='EL',]#
+wl.data<-zoop.data[zoop.data$lakeID=='WL',]
+wl.biomass<-c()#
+for(i in 1:nrow(el.data)){#
+	rowi<-match(el.data$uniqueID[i],wl.data$uniqueID)#
+	wl.biomass[i]<-wl.data$biomass_g_m2[rowi]#
+}
+wl.biomass
+el.data$wl.biomass<-wl.biomass
+head(el.data)
+zoop.data<-el.data[,c(4,6,10,11,18,20)]
+head(zoop.data)
+zoop.data<-el.data[,c(4,6,10,11,18,21)]
+head(zoop.data)
+zoop.data[is.na(zoop.data),]
+zoop.data[is.na(zoop.data$wl.biomass),]
+colnames(zoop.data)[c(5,6)]
+colnames(zoop.data)[c(5,6)]<-c('el.biomass','wl.biomass')
+head(zoop.data)
+zoop.data<-zoop.data[zoop.data$dateSample!='2014-06-25',]
+head(zoop.data)
+zoop.data<-zoop.data[zoop.data$dateSample!='2011-06-15',]
+zoop.data[is.na(zoop.data$wl.biomass),]
+zoop.data$wl.biomass[is.na(zoop.biomass$wl.biomass)]
+zoop.data$wl.biomass[is.na(zoop.data$wl.biomass)]
+zoop.data$wl.biomass[is.na(zoop.data$wl.biomass)]=0
+head(zoop.data)
+zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)]
+zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)]
+zoop.data$el.biomass
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')
+head(zoop.data)
+zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)]
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)])
+head(zoop.data)
+aggregate(cbind(zoop.data$el.biomass,zoop.data$wl.biomass)~zoop.data$year+zoop.data$datSample)
+aggregate(cbind(zoop.data$el.biomass,zoop.data$wl.biomass)~zoop.data$year+zoop.data$dateSample,sum,na.rm=T)
+aggregate(cbind(el.biomass,wl.biomass)~year+dateSample,data=zoop.data,sum,na.rm=T)
+ag.data<-aggregate(cbind(el.biomass,wl.biomass)~year+dateSample,data=zoop.data,sum,na.rm=T)
+head(ag.data)
+RIA(pre1=ag.data$el.biomass[ag.data$year==2011 | ag.data$year==2012],pre2=ag.data$wl.biomass[ag.data$year==2011 | ag.data$year==2012],post1=ag.data$el.biomass[ag.data$year==2013 | ag.data$year==2014],post2=ag.data$wl.biomass[ag.data$year==2013 | ag.data$year==2014])
+(538*2)*2.50
+(538*2)/25
+43.04*2.50
+RIA(pre1=ag.data$el.biomass[ag.data$year==2011 | ag.data$year==2012],pre2=ag.data$wl.biomass[ag.data$year==2011 | ag.data$year==2012],post1=ag.data$el.biomass[ag.data$year==2013 | ag.data$year==2014],post2=ag.data$wl.biomass[ag.data$year==2013 | ag.data$year==2014])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)])
+setwd('~/Documents/Notre Dame/long lake data/chaoborus data')
+list.files()
+chaobs<-read.csv('chaoborusDataLongLake2011-2014.csv')
+chaobs
+el.chaobs<-chaobs[chaobs$lakeID=='EL',]
+el.chaobs<-chaobs[chaobs$lakeID=='EL',]#
+wl.chaobs<-chaobs[chaobs$lakeID=='WL',]
+wl<-c()#
+for(i in 1:nrow(el.chaobs)){#
+	rowi<-match(el.chaobs$dateSample[i],wl.chaobs$dateSample)#
+	wl[i]<-wl.chaobs$g.m2[rowi]#
+}
+wl
+el.chaobs$wl.biomass<-wl
+el.chaobs
+el.chaobs$wl.biomass[is.na(el.chaobs$wl.biomass)]
+el.chaobs$wl.biomass[is.na(el.chaobs$wl.biomass)]=0
+el.chaobs$wl.biomass[is.na(el.chaobs$wl.biomass)]
+el.chaobs
+el.chaobs$year<-format(as.Date(el.chaobs$dateSample,'%m/%d/%y'),'%Y')
+head(el.chaobs)
+RIA(pre1=el.chaobs$g.m2[el.chaobs$year==2011 | el.chaobs$year==2012],pre2=el.chaobs$wl.biomass[el.chaobs$year==2011 | el.chaobs$year==2012],post1=el.chaobs$g.m2[el.chaobs$year==2013 | el.chaobs$year==2014],post2=el.chaobs$wl.biomass[el.chaobs$year==2013 | el.chaobs$year==2014])
+RIA(pre1=ag.data$el.biomass[ag.data$year==2011 | ag.data$year==2012],pre2=ag.data$wl.biomass[ag.data$year==2011 | ag.data$year==2012],post1=ag.data$el.biomass[ag.data$year==2013 | ag.data$year==2014],post2=ag.data$wl.biomass[ag.data$year==2013 | ag.data$year==2014])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)])
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000)
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000) #p=0.0418
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000) #p=0.182
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000) #p=0.025
+RIA(pre1=ag.data$el.biomass[ag.data$year==2011 | ag.data$year==2012],pre2=ag.data$wl.biomass[ag.data$year==2011 | ag.data$year==2012],post1=ag.data$el.biomass[ag.data$year==2013 | ag.data$year==2014],post2=ag.data$wl.biomass[ag.data$year==2013 | ag.data$year==2014],n.iter=5000) #p=0.035
+RIA(pre1=el.chaobs$g.m2[el.chaobs$year==2011 | el.chaobs$year==2012],pre2=el.chaobs$wl.biomass[el.chaobs$year==2011 | el.chaobs$year==2012],post1=el.chaobs$g.m2[el.chaobs$year==2013 | el.chaobs$year==2014],post2=el.chaobs$wl.biomass[el.chaobs$year==2013 | el.chaobs$year==2014],n.iter=5000) #p=0.3
+head(zoop.data)
+plot(as.Date(zoop.data$dateSample[zoop.data$taxa=='cyclopoid'],'%Y-%m-%d'),(zoop.data$el.biomass[zoop.data$taxa=='cyclopoid']-zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid']))
+head(zoop.data)
+)
+dates<-unique(zoop.data$dateSample)
+dates
+Yt.daphnia
+glm(Ytplus1.daphnia~Yt.daphnia)
+glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia)
+summary(lm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia))
+summary(glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia))
+daphnia.intercept<-glm(Ytplus1.daphnia~Yt.daphnia+1)
+daphnia.intercept
+daphnia.mi<-glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia)
+daphnia.mi
+anova(daphnia.mi,daphnia.intercept,test='Chisq')
+daphnia.intercept<-glm(Ytplus1.daphnia~Yt.daphnia)
+anova(daphnia.intercept,daphnia.mi,test='Chisq')
+plot(1:length(Yt.daphnia),Yt.daphnia)

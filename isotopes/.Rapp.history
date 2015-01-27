@@ -1161,7 +1161,6 @@ colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')#
 zoop.rr<-cbind(iso.zoop,resource.reliance)
 boxplot(zoop.rr$fPhyt)
 boxplot(zoop.rr$fTerr~zoop.rr$lakeID*zoop.rr$year)
-boxplot(zoop.rr$fTerr~zoop.rr$lakeID*zoop.rr$year)
 quartz()
 boxplot(zoop.rr$fPhyt~zoop.rr$lakeID*zoop.rr$year)
 unique(zoop.rr$taxa)
@@ -1519,7 +1518,6 @@ biPlot<-function(lake, year, taxa){#
 	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
 	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
 }
-biPlot('EL',2011,'daphnia')
 biPlot('EL',2011,'daphnia')
 biPlot('EL',2011,'copepods')
 biPlot('EL',2011,'holopedium')
