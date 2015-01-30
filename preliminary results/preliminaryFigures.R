@@ -1,6 +1,8 @@
 #Early figures for Long Lake zooplankton
 #Patrick Kelly 19 January 2014
 
+library(ggplot2)
+library(gridExtra)
 #start wth figure for Stuart -> ratio of East:West long biomass - just using the mean, by year
 #load zooplankton data
 setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
@@ -31,7 +33,7 @@ el.zoops$wl.biomass.gm2<-wl.biomass.gm2
 el.zoops$ratio<-el.zoops$biomass.gm2/el.zoops$wl.biomass.gm2
 
 #add year to data frame
-el.zoops$year<-format(as.Date(el.zoops$dateSample,'%Y-%m-%d'),'%Y')
+el.zoops$year<-format(as.Date(el.zoops$dateSample,'%m/%d/%y'),'%Y')
 
 #Make boxplots for taxa-specific biomass differences, also do total zooplankton biomass
 #Daphnia
@@ -52,28 +54,42 @@ colnames(tot.zoops)<-c('dateSample','el.biomass.gm2','wl.biomass.gm2')
 #calculate ratio of EL:WL
 tot.zoops$ratio<-tot.zoops$el.biomass.gm2/tot.zoops$wl.biomass.gm2
 #add year to make the graph
-tot.zoops$year<-format(as.Date(tot.zoops$dateSample,'%Y-%m-%d'),'%Y')
+tot.zoops$year<-format(as.Date(tot.zoops$dateSample,'%m/%d/%y'),'%Y')
 
 #make a boxplot of total zooplankton biomass
-boxplot(tot.zoops$ratio~tot.zoops$year,xlab='year',ylab='EL:WL biomass',main='total zooplankton')
-abline(h=1,lty=2,col='red') #<-add red line at 1 to visualize where zooplankton biomass is greater in East than in West
+boxplot(tot.zoops$ratio~tot.zoops$year,xlab='Year',ylab='EL:WL biomass',boxwex=0.5,cex.lab=1.2,cex.axis=1.2)
+abline(h=1,lty=2,col='grey',lwd=2) #<-add red line at 1 to visualize where zooplankton biomass is greater in East than in West
+#ratio of mean biomass to boxplot
+el.mean<-tapply(tot.zoops$el.biomass.gm2,tot.zoops$year,mean)
+wl.mean<-tapply(tot.zoops$wl.biomass.gm2,tot.zoops$year,mean)
+ratio.mean<-el.mean/wl.mean
+points(c(1,2,3,4),ratio.mean,pch=21,cex=2.5)
+
 
 #Plante and Downing Production
 prod<-read.csv('productionByTaxa_2011-2014.csv')
 
 prod.daphnia<-prod[prod$taxa=='daphnia',]
-ggplot(data=prod.daphnia, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
+daph.plot<-ggplot(data=prod.daphnia, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge(),colour='black')+scale_fill_manual(values=c('EL'='black','WL'='white'))+theme_bw(base_size=14)+ylab(expression(paste('Production (g m'^-2,' yr'^-1,')')))+xlab('Year')+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank())+geom_hline(yintercept=0)+theme(legend.position='none')
 
 prod.cyclopoid<-prod[prod$taxa=='cyclopoid',]
-ggplot(data=prod.cyclopoid, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
+cyc.plot<-ggplot(data=prod.cyclopoid, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge(),colour='black')+scale_fill_manual(values=c('EL'='black','WL'='white'))+theme_bw(base_size=14)+ylab(expression(paste('Production (g m'^-2,' yr'^-1,')')))+xlab('Year')+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank())+geom_hline(yintercept=0)+theme(legend.position='none')
 
 prod.holopedium<-prod[prod$taxa=='holopedium',]
-ggplot(data=prod.holopedium, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
+holo.plot<-ggplot(data=prod.holopedium, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge(),colour='black')+scale_fill_manual(values=c('EL'='black','WL'='white'))+theme_bw(base_size=14)+ylab(expression(paste('Production (g m'^-2,' yr'^-1,')')))+xlab('Year')+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank())+geom_hline(yintercept=0)+theme(legend.position='none')
 
 #Total production
 tot.prod<-aggregate(prod$production.g.m2.yr,by=list(prod$lakeID,prod$year),sum,na.rm=T) 
 colnames(tot.prod)<-c('lakeID','year','production.g.m2.yr')
 
-#cyclopoid
-cyclopoid.data<-prod[prod$taxa=='cyclopoid',]
-ggplot(data=tot.prod,aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
+tot.plot<-ggplot(data=tot.prod, aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge(),colour='black')+scale_fill_manual(values=c('EL'='black','WL'='white'))+theme_bw(base_size=14)+ylab(expression(paste('Production (g m'^-2,' yr'^-1,')')))+xlab('Year')+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank())+geom_hline(yintercept=0)+theme(legend.position='bottom')+annotate('text',x=2014,y=12,label='Total',size=7)
+
+
+#combined plot of everything
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+myLegend<-g_legend(tot.plot)
+test<-grid.arrange(arrangeGrob(daph.plot,cyc.plot,holo.plot,tot.plot+theme(legend.position='none'),nrow=2),myLegend,nrow=2,heights=c(10,1))

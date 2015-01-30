@@ -1,14 +1,776 @@
-ggplot(data=tot.prod,aes(x=year,y=production.g.m2,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
-ggplot(data=tot.prod,aes(x=year,y=production.g.m2.yr,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='brown','WL'='blue'))+ylab(expression(paste('production (g m'^-2,' yr'^-1,')')))
-temp<-mean(temp.past$temp[temp.past$year==2013 & temp.past$lakeID=='EL'])
-temp
-temp<-mean(temp.past$temp[temp.past$year==2013 & temp.past$lakeID=='WL'])
-temp
-tapply(lengths.past$mass[lengths.past$year==2013 & lengths.past$lakeID=='EL'],lengths.past$taxa[lengths.past$year==2013 & lengths.past$lakeID=='EL'],max,na.rm=T)/1000
-tapply(lengths.past$mass[lengths.past$year==2013 & lengths.past$lakeID=='WL'],lengths.past$taxa[lengths.past$year==2013 & lengths.past$lakeID=='WL'],max,na.rm=T)/1000
-#Script that runs MAR (multivariate autoregressive) model for Long Lake zooplankton from 2011-2014 (browning experiment)#
-#Objective: to determine potential drivers of zooplankton biomass across the experiments in the two basins#
-#Using effect sizes of a model of hypothesized drivers, rather than running exhaustive search of potential drivers#
+is.na(iso.pml$d13Calgae[i])
+el.ob<-c()#
+wl.ob<-c()#
+for(i in 1:nrow(iso.pml)){#
+	if(is.na(iso.pml$d13Calgae[i])){#
+		i=i=1#
+	}#
+	else if(iso.pml$lakeID[i]=='EL' & (iso.pml$d13Calgae[i]>el.mild.threshold.upper | iso.pml$d13Calgae[i]<el.mild.threshold.lower)){#
+		el.ob<-c(el.ob,i)#
+	}#
+	else if(iso.pml$lakeID[i]=='WL' & (iso.pml$d13Calgae[i]>wl.mild.threshold.upper | iso.pml$d13Calgae[i]<wl.mild.threshold.lower)){#
+		wl.ob<-c(wl.ob,i)#
+	}#
+}
+el.ob
+wl.ob
+el.ob<-c()#
+wl.ob<-c()#
+for(i in 1:nrow(iso.pml)){#
+	if(is.na(iso.pml$d13Calgae[i])){#
+		i=i=1#
+	}#
+	if(iso.pml$lakeID[i]=='EL' & (iso.pml$d13Calgae[i]>el.mild.threshold.upper | iso.pml$d13Calgae[i]<el.mild.threshold.lower)){#
+		el.ob<-c(el.ob,i)#
+	}#
+	if(iso.pml$lakeID[i]=='WL' & (iso.pml$d13Calgae[i]>wl.mild.threshold.upper | iso.pml$d13Calgae[i]<wl.mild.threshold.lower)){#
+		wl.ob<-c(wl.ob,i)#
+	}#
+}
+el.ob
+wl.ob
+el.mild.threshold.upper
+el.mild.threshold.lower
+iso.pml[(iso.pml$lakeID=='EL' & iso.pml$d13Calgae>el.ml.threshold.lower & iso.pml$d13Calgae<el.mild.threshold.upper) | (iso.pml$lakeID=='WL' & iso.pml$d13Calgae>wl.ml.threshold.lower & iso.pml$d13Calgae<wl.mild.threshold.upper),]
+iso.pml[(iso.pml$lakeID=='EL' & iso.pml$d13Calgae>el.mild.threshold.lower & iso.pml$d13Calgae<el.mild.threshold.upper) | (iso.pml$lakeID=='WL' & iso.pml$d13Calgae>wl.mild.threshold.lower & iso.pml$d13Calgae<wl.mild.threshold.upper),]
+iso.pml<-iso.pml[(iso.pml$lakeID=='EL' & iso.pml$d13Calgae>el.mild.threshold.lower & iso.pml$d13Calgae<el.mild.threshold.upper) | (iso.pml$lakeID=='WL' & iso.pml$d13Calgae>wl.mild.threshold.lower & iso.pml$d13Calgae<wl.mild.threshold.upper),]
+#add year to make it easier#
+iso.pml$year<-format(as.Date(iso.pml$dateSample,'%m/%d/%Y'),'%Y')#
+#
+#get zooplankton data#
+zoop.2011<-read.csv('2011zoopIsotopes.csv')#
+zoop.2012<-read.csv('2012zoopIsotopes.csv')#
+el.zoop.2012<-read.csv('EastLongZoopIsotops2012.csv')#
+#
+#need to add ID numbers to el.zoop.2012 starting at Z-0371#
+num<-0371:0391#
+IDs<-paste('Z-0',num,sep='')#
+el.zoop.2012<-cbind(isotopeID=IDs[-length(IDs)],el.zoop.2012)#
+#
+#combine two data frames#
+zoop.pre<-rbind(zoop.2011,zoop.2012)#
+#
+#add zooplankton data#
+d13C<-c()#
+d15N<-c()#
+for(i in 1:nrow(zoop.pre)){#
+	rowi<-match(zoop.pre$isotopeID[i],results$isotopeID)#
+	d13C[i]<-results$d13C[rowi]#
+	d15N[i]<-results$d15N[rowi]#
+}#
+zoop.pre$d13C<-d13C#
+zoop.pre$d15N<-d15N#
+#
+#remove 0s and NAs#
+zoop.pre<-zoop.pre[!is.na(zoop.pre$d13C) & zoop.pre$d13C!=0,]#
+#
+#fix dates on el 2012 data#
+el.zoop.2012$dateSample<-format(as.Date(el.zoop.2012$dateSample,'%m/%d/%y'),'%m/%d/%Y')#
+#
+#remove flag column#
+zoop.pre<-zoop.pre[,-5]#
+#
+#combine data#
+zoop.pre<-rbind(zoop.pre,el.zoop.2012)#
+#
+#load 2013 and 2014 data#
+zoop.2013<-read.csv('LOzoops2013.csv')#
+log.2013<-read.csv('IsotopeLog2013.csv')#
+zoop.2014<-read.csv('LOzoops2014.csv')#
+zoop.2014<-zoop.2014[-c(1,4),]#
+log.2014<-read.csv('IsotopeLog2014.csv')#
+#
+#fix zoop.2013 IDs#
+end<-strsplit(zoop.2013$ID1,split='Z')#
+newID<-c()#
+for(i in 1:length(end)){#
+	newID[i]=paste('Z-',end[[i]][2],sep='')#
+}#
+zoop.2013$ID1=newID#
+#
+#make one big data frae of post samples#
+zoop.2013<-rbind(zoop.2013,zoop.2014)#
+#make zoop.post with log and zoop data#
+zoop.post<-c()#
+for(i in 1:nrow(zoop.2013)){#
+	rowi<-match(zoop.2013$ID1[i],log.2013$Isotope.ID)#
+	if(!is.na(rowi)){#
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2013$Lake.ID[rowi],dateSample=format(as.Date(log.2013$Date.time[rowi],'%m/%d/%y %H:%M'),'%m/%d/%Y'),taxa=log.2013$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])#
+	}#
+	if(is.na(rowi)){#
+		rowi<-match(zoop.2013$ID1[i],log.2014$Isotope.ID)#
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2014$Lake.ID[rowi],dateSample=format(as.Date(log.2014$Date.Sample[rowi],'%m/%d/%Y'),'%m/%d/%Y'),taxa=log.2014$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])#
+	}#
+	zoop.post=rbind(zoop.post,x)#
+}#
+#
+#combine zoop pre and post#
+iso.zoop<-rbind(zoop.pre,zoop.post)#
+#
+#use only East and West Long#
+iso.zoop<-iso.zoop[iso.zoop$lakeID=='EL' | iso.zoop$lakeID=='WL',]#
+#add year for ease of use#
+iso.zoop$year<-format(as.Date(iso.zoop$dateSample,'%m/%d/%Y'),'%Y')#
+#write function to get end members -> Cphyt, Nphyt, Cterr, Nterr, Cmeth, Nmeth#
+endMember<-function(lakeID,year){#
+	algaeC<-mean(iso.pml$d13Calgae[iso.pml$lakeID==lakeID & iso.pml$year==year])#
+	algaeN<-mean(iso.pml$d15Nalgae[iso.pml$lakeID==lakeID & iso.pml$year==year])#
+	return(c(Cphyto=algaeC,Nphyto=algaeN,Cterr=-24.401,Nterr=-3.303,Cmeth=-60,Nmeth=algaeN))#
+}#
+#
+#linear mixing model to get reosurce reliance, need to make sure to adjust N numbers for trophic fractionation#
+linearMM<-function(Em,zoopC, zoopN){#
+	fPhyto<-((Em[6]-Em[4])*(zoopC-Em[3])-(Em[5]-Em[3])*(zoopN-Em[4]))/((Em[6]-Em[4])*(Em[1]-Em[3])-(Em[5]-Em[3])*(Em[2]-Em[4]))#
+	fTerr<-((zoopC-Em[5])-(Em[1]-Em[5])*fPhyto)/(Em[3]-Em[5])#
+	fCH4<-1-fPhyto-fTerr#
+	out<-c(fPhyto=fPhyto,fTerr=fTerr,fCH4=fCH4)#
+	return(out)#
+}#
+#
+#trophic fractionation ->use 2 for all zooplankton, 3 for Chaoborus...TLfrac=somewhere between 2.5 and 3.1#
+TLfrac=3.1#
+#
+resource.reliance<-c()#
+for(i in 1:nrow(iso.zoop)){#
+	if(iso.zoop$taxa[i]=='chaoborus'){#
+		TL=3#
+	}#
+	else if(iso.zoop$taxa[i]!='chaoborus'){#
+		TL=2#
+	}#
+	em<-endMember(lakeID=iso.zoop$lakeID[i],year=iso.zoop$year[i])#
+	zoopC<-iso.zoop$d13C[i]#
+	zoopN<-iso.zoop$d15N[i]-TL*TLfrac#
+	out<-linearMM(Em=em,zoopC=zoopC,zoopN=zoopN)#
+	resource.reliance<-rbind(resource.reliance,out)#
+}#
+colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')#
+#
+#add resource reliance to iso.zoop#
+zoop.rr<-cbind(iso.zoop,resource.reliance)
+zoop.rr
+TLfrac=2.8#
+#
+resource.reliance<-c()#
+for(i in 1:nrow(iso.zoop)){#
+	if(iso.zoop$taxa[i]=='chaoborus'){#
+		TL=3#
+	}#
+	else if(iso.zoop$taxa[i]!='chaoborus'){#
+		TL=2#
+	}#
+	em<-endMember(lakeID=iso.zoop$lakeID[i],year=iso.zoop$year[i])#
+	zoopC<-iso.zoop$d13C[i]#
+	zoopN<-iso.zoop$d15N[i]-TL*TLfrac#
+	out<-linearMM(Em=em,zoopC=zoopC,zoopN=zoopN)#
+	resource.reliance<-rbind(resource.reliance,out)#
+}#
+colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')#
+#
+#add resource reliance to iso.zoop#
+zoop.rr<-cbind(iso.zoop,resource.reliance)
+zoop.rr
+boxplot(zoop.rr$fPhyt)
+TLfrac=2.5#
+#
+resource.reliance<-c()#
+for(i in 1:nrow(iso.zoop)){#
+	if(iso.zoop$taxa[i]=='chaoborus'){#
+		TL=3#
+	}#
+	else if(iso.zoop$taxa[i]!='chaoborus'){#
+		TL=2#
+	}#
+	em<-endMember(lakeID=iso.zoop$lakeID[i],year=iso.zoop$year[i])#
+	zoopC<-iso.zoop$d13C[i]#
+	zoopN<-iso.zoop$d15N[i]-TL*TLfrac#
+	out<-linearMM(Em=em,zoopC=zoopC,zoopN=zoopN)#
+	resource.reliance<-rbind(resource.reliance,out)#
+}#
+colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')#
+#
+#add resource reliance to iso.zoop#
+zoop.rr<-cbind(iso.zoop,resource.reliance)
+boxplot(zoop.rr$fPhyt)
+boxplot(zoop.rr$fTerr~zoop.rr$lakeID*zoop.rr$year)
+quartz()
+boxplot(zoop.rr$fPhyt~zoop.rr$lakeID*zoop.rr$year)
+unique(zoop.rr$taxa)
+sub('H','h',zoop.rr$taxa)
+zoop.rr$taxa<-tolower(zoop.rr$taxa)
+unique(zoop.rr$taxa)
+zoop.rr$taxa<-sub('zoops','all zoops',zoop.rr$taxa)
+unique(zoop.rr$taxa)
+zoop.rr<-cbind(iso.zoop,resource.reliance)#
+#
+#fix names#
+zoop.rr$taxa<-tolower(zoop.rr$taxa)
+zoop.rr[zoop.rr$taxa=='zoops',]
+zoop.rr$taxa[zoop.rr$taxa=='zoops',]='all zoops'
+zoop.rr$taxa[zoop.rr$taxa=='zoops']='all zoops'
+unique(zoop.rr$taxa)
+head(iso.zoop)
+biPlot<-function(lake, year, taxa){#
+	for(i in 1:length(lake)){#
+	end.member<-endMember(lake[i],year[i])#
+	zoops<-iso.zoop[iso.zoop$lakeID==lake[i] & iso.zoop$taxa==taxa[i] & iso.zoop$year==year[i],]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2)#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	}#
+}
+biPlot('EL',2012,'daphnia')
+biPlot<-function(lake, year, taxa){#
+	for(i in 1:length(lake)){#
+	end.member<-endMember(lake[i],year[i])#
+	zoops<-iso.zoop[iso.zoop$lakeID==lake[i] & iso.zoop$taxa==taxa[i] & iso.zoop$year==year[i],]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2)#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	}#
+}
+head(iso.zoop)
+head(zoop.rr)
+zoop.rr$year<-format(as.Date(zoop.rr$dateSample,'%m/%d/%Y'),'%Y')
+head(zoop.rr)
+biPlot<-function(lake, year, taxa){#
+	for(i in 1:length(lake)){#
+	end.member<-endMember(lake[i],year[i])#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake[i] & zoop.rr$taxa==taxa[i] & zoop.rr$year==year[i],]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2)#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+	}#
+}
+biPlot('EL',2012,'daphnia')
+biPlot<-function(lake, year, taxa){#
+	for(i in 1:length(lake)){#
+	end.member<-endMember(lake[i],year[i])#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake[i] & zoop.rr$taxa==taxa[i] & zoop.rr$year==year[i],]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+	}#
+}
+biplot(c('EL','EL','EL','EL'),c(2011,2012,2013,2014),c('daphnia','daphnia','daphnia','daphnia'))
+lake=c('EL','EL','EL','EL')
+date=c(2011,2012,2013,2014)
+taxa=c('daphnia','daphnia','daphnia','daphnia')
+end.member<-endMember(lake[i],year[i])#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake[i] & zoop.rr$taxa==taxa[i] & zoop.rr$year==year[i],]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+	}
+year=c(2011,2012,2013,2014)
+end.member<-endMember(lake[i],year[i])#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake[i] & zoop.rr$taxa==taxa[i] & zoop.rr$year==year[i],]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+	}
+biPlot<-function(lake, year, taxa){#
+	end.member<-endMember(lake,year)#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake & zoop.rr$taxa==taxa & zoop.rr$year==year,]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N,pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+}
+biPlot('EL',2011,'copepods')
+biPlot<-function(lake, year, taxa){#
+	end.member<-endMember(lake,year)#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake & zoop.rr$taxa==taxa & zoop.rr$year==year,]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N-(TLfrac*2),pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+}
+biPlot('EL',2011,'copepods')
+biPlot('EL',2011,'daphnia')
+#this script determines algae 13C and 15N numbers from C:N of terrestrial vegetation, algae, and POM#
+#Patrick Kelly 21 January 2015#
+#
+#First need to get C:N data of POM for 2011-2014#
+#get POM C:N data from covariate data table#
+setwd('~/Documents/Notre Dame/long lake data/covariate data')#
+POM<-read.csv('pocStoich_2011-2014.csv')#
+#
+#get fracAlgae from C:N of POM, leaves, and algae....leaves and algae from Francis et al. (2011) and from Stuart's code.  Might need to look through the literature and find other ranges of these umbers and do sensitivity analysis#
+leavesCN<-35.5#
+algaeCN<-6.8#
+POM$fracAlgae<-(leavesCN-POM$CN)/(leavesCN-algaeCN)#
+#
+#Now load isotope data from the database#
+pom.iso<-dbGetQuery(con,'SELECT iso.isotopeID,iso.lakeID,iso.dateSample,iso.depthClass FROM ISOTOPE_SAMPLES_POC AS iso')#
+results<-dbGetQuery(con,'SELECT iso.isotopeID,iso.d13C,iso.d15N FROM ISOTOPE_RESULTS AS iso')#
+#
+#match samples and put d13C and d15N data into pom.iso#
+iso.data<-c()#
+for(i in 1:nrow(pom.iso)){#
+	rowi<-match(pom.iso$isotopeID[i],results$isotopeID)#
+	d13C<-results$d13C[rowi]#
+	d15N<-results$d15N[i]#
+	x<-data.frame(pom.iso[i,],d13C,d15N)#
+	iso.data<-rbind(iso.data,x)#
+}#
+#use only East and West long data#
+iso.data<-iso.data[iso.data$lakeID=='EL' | iso.data$lakeID=='WL',]#
+#
+#pull in 2013 and 2014 isotope data#
+setwd('~/Documents/Notre Dame/long lake data/isotopes')#
+iso.2013.2014<-read.csv('POCisotopes_2013-2014.csv')#
+#make data match the old data#
+iso.2013.2014<-iso.2013.2014[,c(3,23,22,25,17,9)]#
+#
+#fix iso.data dates to match iso.2013.2014#
+iso.data$dateSample<-format(as.Date(iso.data$dateSample,'%Y-%m-%d %H:%M:%S'),'%m/%d/%Y')#
+#
+#combine old and new isotope data#
+colnames(iso.2013.2014)[1]='isotopeID'#
+iso.data<-rbind(iso.data,iso.2013.2014)#
+#
+#get rid of samples where d15N is 0#
+iso.data<-iso.data[iso.data$d15N!=0,]#
+iso.data<-iso.data[iso.data$d13C!=0,]#
+#
+#match POM fracAlage to isotope data#
+#make unique IDs for both first#
+POM$uniqueID<-paste(POM$lakeID,POM$dateSample,POM$depthClass,sep='.')#
+iso.data$uniqueID<-paste(iso.data$lakeID,iso.data$dateSample,iso.data$depthClass,sep='.')#
+#
+fracAlgae<-c()#
+for(i in 1:nrow(iso.data)){#
+	rowi<-match(iso.data$uniqueID[i],POM$uniqueID)#
+	fracAlgae[i]<-POM$fracAlgae[rowi]#
+}#
+iso.data$fracAlgae<-fracAlgae#
+#
+#calculate d13C and d15N of algae from linear mixing model#
+tPOC_C<--24.401 #Taken from IRMS sample of tPOC dog buckets by Zwart#
+tPOC_N<--4.6 #ditto#
+iso.data$d13Calgae<-(iso.data$d13C-(1-iso.data$fracAlgae)*-tPOC_C)/iso.data$fracAlgae #these all seem way too depleted, but I'll go with it#
+iso.data$d15Nalgae<-(iso.data$d15N-(1-iso.data$fracAlgae)*-tPOC_N)/iso.data$fracAlgae#
+#
+#use only PML isotopes#
+iso.pml<-iso.data[iso.data$depthClass=='PML',]#
+#
+#remove NAs#
+iso.pml<-iso.pml[!is.na(iso.pml$d13Calgae),]#
+#
+#remove outliers so it makes more sense - some values way too negative#
+#get interquartile range for dC13algae for east and west seperately <- this should probably be done by year, but we'll start with this for now#
+el.lowerq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='EL'],na.rm=T)[2]#
+el.upperq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='EL'],na.rm=T)[3]#
+el.iqr<-el.upperq-el.lowerq#
+#
+wl.lowerq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='WL'],na.rm=T)[2]#
+wl.upperq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='WL'],na.rm=T)[3]#
+wl.iqr<-wl.upperq-wl.lowerq#
+#
+#compute the bounds for a mild outlier#
+el.mild.threshold.upper<-(el.iqr*1.5)+el.upperq#
+el.mild.threshold.lower<-el.lowerq-(el.iqr*1.5)#
+wl.mild.threshold.upper<-(wl.iqr*1.5)+wl.upperq#
+wl.mild.threshold.lower<-wl.lowerq-(wl.iqr*1.5)#
+#
+#remove outliers#
+iso.pml<-iso.pml[(iso.pml$lakeID=='EL' & iso.pml$d13Calgae>el.mild.threshold.lower & iso.pml$d13Calgae<el.mild.threshold.upper) | (iso.pml$lakeID=='WL' & iso.pml$d13Calgae>wl.mild.threshold.lower & iso.pml$d13Calgae<wl.mild.threshold.upper),]#
+#
+#add year to make it easier#
+iso.pml$year<-format(as.Date(iso.pml$dateSample,'%m/%d/%Y'),'%Y')#
+#
+#get zooplankton data#
+zoop.2011<-read.csv('2011zoopIsotopes.csv')#
+zoop.2012<-read.csv('2012zoopIsotopes.csv')#
+el.zoop.2012<-read.csv('EastLongZoopIsotops2012.csv')#
+#
+#need to add ID numbers to el.zoop.2012 starting at Z-0371#
+num<-0371:0391#
+IDs<-paste('Z-0',num,sep='')#
+el.zoop.2012<-cbind(isotopeID=IDs[-length(IDs)],el.zoop.2012)#
+#
+#combine two data frames#
+zoop.pre<-rbind(zoop.2011,zoop.2012)#
+#
+#add zooplankton data#
+d13C<-c()#
+d15N<-c()#
+for(i in 1:nrow(zoop.pre)){#
+	rowi<-match(zoop.pre$isotopeID[i],results$isotopeID)#
+	d13C[i]<-results$d13C[rowi]#
+	d15N[i]<-results$d15N[rowi]#
+}#
+zoop.pre$d13C<-d13C#
+zoop.pre$d15N<-d15N#
+#
+#remove 0s and NAs#
+zoop.pre<-zoop.pre[!is.na(zoop.pre$d13C) & zoop.pre$d13C!=0,]#
+#
+#fix dates on el 2012 data#
+el.zoop.2012$dateSample<-format(as.Date(el.zoop.2012$dateSample,'%m/%d/%y'),'%m/%d/%Y')#
+#
+#remove flag column#
+zoop.pre<-zoop.pre[,-5]#
+#
+#combine data#
+zoop.pre<-rbind(zoop.pre,el.zoop.2012)#
+#
+#load 2013 and 2014 data#
+zoop.2013<-read.csv('LOzoops2013.csv')#
+log.2013<-read.csv('IsotopeLog2013.csv')#
+zoop.2014<-read.csv('LOzoops2014.csv')#
+zoop.2014<-zoop.2014[-c(1,4),]#
+log.2014<-read.csv('IsotopeLog2014.csv')#
+#
+#fix zoop.2013 IDs#
+end<-strsplit(zoop.2013$ID1,split='Z')#
+newID<-c()#
+for(i in 1:length(end)){#
+	newID[i]=paste('Z-',end[[i]][2],sep='')#
+}#
+zoop.2013$ID1=newID#
+#
+#make one big data frae of post samples#
+zoop.2013<-rbind(zoop.2013,zoop.2014)#
+#make zoop.post with log and zoop data#
+zoop.post<-c()#
+for(i in 1:nrow(zoop.2013)){#
+	rowi<-match(zoop.2013$ID1[i],log.2013$Isotope.ID)#
+	if(!is.na(rowi)){#
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2013$Lake.ID[rowi],dateSample=format(as.Date(log.2013$Date.time[rowi],'%m/%d/%y %H:%M'),'%m/%d/%Y'),taxa=log.2013$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])#
+	}#
+	if(is.na(rowi)){#
+		rowi<-match(zoop.2013$ID1[i],log.2014$Isotope.ID)#
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2014$Lake.ID[rowi],dateSample=format(as.Date(log.2014$Date.Sample[rowi],'%m/%d/%Y'),'%m/%d/%Y'),taxa=log.2014$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])#
+	}#
+	zoop.post=rbind(zoop.post,x)#
+}#
+#
+#combine zoop pre and post#
+iso.zoop<-rbind(zoop.pre,zoop.post)#
+#
+#use only East and West Long#
+iso.zoop<-iso.zoop[iso.zoop$lakeID=='EL' | iso.zoop$lakeID=='WL',]#
+#add year for ease of use#
+iso.zoop$year<-format(as.Date(iso.zoop$dateSample,'%m/%d/%Y'),'%Y')#
+#write function to get end members -> Cphyt, Nphyt, Cterr, Nterr, Cmeth, Nmeth#
+endMember<-function(lakeID,year){#
+	algaeC<-mean(iso.pml$d13Calgae[iso.pml$lakeID==lakeID & iso.pml$year==year])#
+	algaeN<-mean(iso.pml$d15Nalgae[iso.pml$lakeID==lakeID & iso.pml$year==year])#
+	return(c(Cphyto=algaeC,Nphyto=algaeN,Cterr=-24.401,Nterr=-3.303,Cmeth=-60,Nmeth=algaeN))#
+}#
+#
+#linear mixing model to get reosurce reliance, need to make sure to adjust N numbers for trophic fractionation#
+linearMM<-function(Em,zoopC, zoopN){#
+	fPhyto<-((Em[6]-Em[4])*(zoopC-Em[3])-(Em[5]-Em[3])*(zoopN-Em[4]))/((Em[6]-Em[4])*(Em[1]-Em[3])-(Em[5]-Em[3])*(Em[2]-Em[4]))#
+	fTerr<-((zoopC-Em[5])-(Em[1]-Em[5])*fPhyto)/(Em[3]-Em[5])#
+	fCH4<-1-fPhyto-fTerr#
+	out<-c(fPhyto=fPhyto,fTerr=fTerr,fCH4=fCH4)#
+	return(out)#
+}#
+#
+#trophic fractionation ->use 2 for all zooplankton, 3 for Chaoborus...TLfrac=somewhere between 2.5 and 3.1#
+TLfrac=2.5#
+#
+resource.reliance<-c()#
+for(i in 1:nrow(iso.zoop)){#
+	if(iso.zoop$taxa[i]=='chaoborus'){#
+		TL=3#
+	}#
+	else if(iso.zoop$taxa[i]!='chaoborus'){#
+		TL=2#
+	}#
+	em<-endMember(lakeID=iso.zoop$lakeID[i],year=iso.zoop$year[i])#
+	zoopC<-iso.zoop$d13C[i]#
+	zoopN<-iso.zoop$d15N[i]-TL*TLfrac#
+	out<-linearMM(Em=em,zoopC=zoopC,zoopN=zoopN)#
+	resource.reliance<-rbind(resource.reliance,out)#
+}#
+colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')#
+#
+#add resource reliance to iso.zoop#
+zoop.rr<-cbind(iso.zoop,resource.reliance)#
+#
+#fix names#
+zoop.rr$taxa<-tolower(zoop.rr$taxa)#
+zoop.rr$taxa[zoop.rr$taxa=='zoops']='all zoops'#
+#Write function to make bi-plot that shows phyt, terrm and methane, as well as a taxa of consumers#
+biPlot<-function(lake, year, taxa){#
+	end.member<-endMember(lake,year)#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake & zoop.rr$taxa==taxa & zoop.rr$year==year,]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N-(TLfrac*2),pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
+}
+biPlot('EL',2011,'daphnia')
+biPlot('EL',2011,'copepods')
+biPlot('EL',2011,'holopedium')
+biPlot('EL',2012,'holopedium')
+#this script determines algae 13C and 15N numbers from C:N of terrestrial vegetation, algae, and POM#
+#Patrick Kelly 21 January 2015#
+#
+#First need to get C:N data of POM for 2011-2014#
+#get POM C:N data from covariate data table#
+setwd('~/Documents/Notre Dame/long lake data/covariate data')#
+POM<-read.csv('pocStoich_2011-2014.csv')#
+#
+#get fracAlgae from C:N of POM, leaves, and algae....leaves and algae from Francis et al. (2011) and from Stuart's code.  Might need to look through the literature and find other ranges of these umbers and do sensitivity analysis#
+leavesCN<-35.5#
+algaeCN<-6.8#
+POM$fracAlgae<-(leavesCN-POM$CN)/(leavesCN-algaeCN)#
+#
+#Now load isotope data from the database#
+pom.iso<-dbGetQuery(con,'SELECT iso.isotopeID,iso.lakeID,iso.dateSample,iso.depthClass FROM ISOTOPE_SAMPLES_POC AS iso')#
+results<-dbGetQuery(con,'SELECT iso.isotopeID,iso.d13C,iso.d15N FROM ISOTOPE_RESULTS AS iso')#
+#
+#match samples and put d13C and d15N data into pom.iso#
+iso.data<-c()#
+for(i in 1:nrow(pom.iso)){#
+	rowi<-match(pom.iso$isotopeID[i],results$isotopeID)#
+	d13C<-results$d13C[rowi]#
+	d15N<-results$d15N[i]#
+	x<-data.frame(pom.iso[i,],d13C,d15N)#
+	iso.data<-rbind(iso.data,x)#
+}#
+#use only East and West long data#
+iso.data<-iso.data[iso.data$lakeID=='EL' | iso.data$lakeID=='WL',]#
+#
+#pull in 2013 and 2014 isotope data#
+setwd('~/Documents/Notre Dame/long lake data/isotopes')#
+iso.2013.2014<-read.csv('POCisotopes_2013-2014.csv')#
+#make data match the old data#
+iso.2013.2014<-iso.2013.2014[,c(3,23,22,25,17,9)]#
+#
+#fix iso.data dates to match iso.2013.2014#
+iso.data$dateSample<-format(as.Date(iso.data$dateSample,'%Y-%m-%d %H:%M:%S'),'%m/%d/%Y')#
+#
+#combine old and new isotope data#
+colnames(iso.2013.2014)[1]='isotopeID'#
+iso.data<-rbind(iso.data,iso.2013.2014)#
+#
+#get rid of samples where d15N is 0#
+iso.data<-iso.data[iso.data$d15N!=0,]#
+iso.data<-iso.data[iso.data$d13C!=0,]#
+#
+#match POM fracAlage to isotope data#
+#make unique IDs for both first#
+POM$uniqueID<-paste(POM$lakeID,POM$dateSample,POM$depthClass,sep='.')#
+iso.data$uniqueID<-paste(iso.data$lakeID,iso.data$dateSample,iso.data$depthClass,sep='.')#
+#
+fracAlgae<-c()#
+for(i in 1:nrow(iso.data)){#
+	rowi<-match(iso.data$uniqueID[i],POM$uniqueID)#
+	fracAlgae[i]<-POM$fracAlgae[rowi]#
+}#
+iso.data$fracAlgae<-fracAlgae#
+#
+#calculate d13C and d15N of algae from linear mixing model#
+tPOC_C<--24.401 #Taken from IRMS sample of tPOC dog buckets by Zwart#
+tPOC_N<--4.6 #ditto#
+iso.data$d13Calgae<-(iso.data$d13C-(1-iso.data$fracAlgae)*-tPOC_C)/iso.data$fracAlgae #these all seem way too depleted, but I'll go with it#
+iso.data$d15Nalgae<-(iso.data$d15N-(1-iso.data$fracAlgae)*-tPOC_N)/iso.data$fracAlgae#
+#
+#use only PML isotopes#
+iso.pml<-iso.data[iso.data$depthClass=='PML',]#
+#
+#remove NAs#
+iso.pml<-iso.pml[!is.na(iso.pml$d13Calgae),]#
+#
+#remove outliers so it makes more sense - some values way too negative#
+#get interquartile range for dC13algae for east and west seperately <- this should probably be done by year, but we'll start with this for now#
+el.lowerq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='EL'],na.rm=T)[2]#
+el.upperq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='EL'],na.rm=T)[3]#
+el.iqr<-el.upperq-el.lowerq#
+#
+wl.lowerq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='WL'],na.rm=T)[2]#
+wl.upperq<-quantile(iso.pml$d13Calgae[iso.pml$lakeID=='WL'],na.rm=T)[3]#
+wl.iqr<-wl.upperq-wl.lowerq#
+#
+#compute the bounds for a mild outlier#
+el.mild.threshold.upper<-(el.iqr*1.5)+el.upperq#
+el.mild.threshold.lower<-el.lowerq-(el.iqr*1.5)#
+wl.mild.threshold.upper<-(wl.iqr*1.5)+wl.upperq#
+wl.mild.threshold.lower<-wl.lowerq-(wl.iqr*1.5)#
+#
+#remove outliers#
+iso.pml<-iso.pml[(iso.pml$lakeID=='EL' & iso.pml$d13Calgae>el.mild.threshold.lower & iso.pml$d13Calgae<el.mild.threshold.upper) | (iso.pml$lakeID=='WL' & iso.pml$d13Calgae>wl.mild.threshold.lower & iso.pml$d13Calgae<wl.mild.threshold.upper),]#
+#
+#add year to make it easier#
+iso.pml$year<-format(as.Date(iso.pml$dateSample,'%m/%d/%Y'),'%Y')#
+#
+#get zooplankton data#
+zoop.2011<-read.csv('2011zoopIsotopes.csv')#
+zoop.2012<-read.csv('2012zoopIsotopes.csv')#
+el.zoop.2012<-read.csv('EastLongZoopIsotops2012.csv')#
+#
+#need to add ID numbers to el.zoop.2012 starting at Z-0371#
+num<-0371:0391#
+IDs<-paste('Z-0',num,sep='')#
+el.zoop.2012<-cbind(isotopeID=IDs[-length(IDs)],el.zoop.2012)#
+#
+#combine two data frames#
+zoop.pre<-rbind(zoop.2011,zoop.2012)#
+#
+#add zooplankton data#
+d13C<-c()#
+d15N<-c()#
+for(i in 1:nrow(zoop.pre)){#
+	rowi<-match(zoop.pre$isotopeID[i],results$isotopeID)#
+	d13C[i]<-results$d13C[rowi]#
+	d15N[i]<-results$d15N[rowi]#
+}#
+zoop.pre$d13C<-d13C#
+zoop.pre$d15N<-d15N#
+#
+#remove 0s and NAs#
+zoop.pre<-zoop.pre[!is.na(zoop.pre$d13C) & zoop.pre$d13C!=0,]#
+#
+#fix dates on el 2012 data#
+el.zoop.2012$dateSample<-format(as.Date(el.zoop.2012$dateSample,'%m/%d/%y'),'%m/%d/%Y')#
+#
+#remove flag column#
+zoop.pre<-zoop.pre[,-5]#
+#
+#combine data#
+zoop.pre<-rbind(zoop.pre,el.zoop.2012)#
+#
+#load 2013 and 2014 data#
+zoop.2013<-read.csv('LOzoops2013.csv')#
+log.2013<-read.csv('IsotopeLog2013.csv')#
+zoop.2014<-read.csv('LOzoops2014.csv')#
+zoop.2014<-zoop.2014[-c(1,4),]#
+log.2014<-read.csv('IsotopeLog2014.csv')#
+#
+#fix zoop.2013 IDs#
+end<-strsplit(zoop.2013$ID1,split='Z')#
+newID<-c()#
+for(i in 1:length(end)){#
+	newID[i]=paste('Z-',end[[i]][2],sep='')#
+}#
+zoop.2013$ID1=newID#
+#
+#make one big data frae of post samples#
+zoop.2013<-rbind(zoop.2013,zoop.2014)#
+#make zoop.post with log and zoop data#
+zoop.post<-c()#
+for(i in 1:nrow(zoop.2013)){#
+	rowi<-match(zoop.2013$ID1[i],log.2013$Isotope.ID)#
+	if(!is.na(rowi)){#
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2013$Lake.ID[rowi],dateSample=format(as.Date(log.2013$Date.time[rowi],'%m/%d/%y %H:%M'),'%m/%d/%Y'),taxa=log.2013$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])#
+	}#
+	if(is.na(rowi)){#
+		rowi<-match(zoop.2013$ID1[i],log.2014$Isotope.ID)#
+		x<-data.frame(isotopeID=zoop.2013$ID1[i],lakeID=log.2014$Lake.ID[rowi],dateSample=format(as.Date(log.2014$Date.Sample[rowi],'%m/%d/%Y'),'%m/%d/%Y'),taxa=log.2014$Taxa[rowi],d13C=zoop.2013$d13C[i],d15N=zoop.2013$d15N[i])#
+	}#
+	zoop.post=rbind(zoop.post,x)#
+}#
+#
+#combine zoop pre and post#
+iso.zoop<-rbind(zoop.pre,zoop.post)#
+#
+#use only East and West Long#
+iso.zoop<-iso.zoop[iso.zoop$lakeID=='EL' | iso.zoop$lakeID=='WL',]#
+#add year for ease of use#
+iso.zoop$year<-format(as.Date(iso.zoop$dateSample,'%m/%d/%Y'),'%Y')#
+#write function to get end members -> Cphyt, Nphyt, Cterr, Nterr, Cmeth, Nmeth#
+endMember<-function(lakeID,year){#
+	algaeC<-mean(iso.pml$d13Calgae[iso.pml$lakeID==lakeID & iso.pml$year==year])#
+	algaeN<-mean(iso.pml$d15Nalgae[iso.pml$lakeID==lakeID & iso.pml$year==year])#
+	return(c(Cphyto=algaeC,Nphyto=algaeN,Cterr=-24.401,Nterr=-3.303,Cmeth=-60,Nmeth=algaeN))#
+}#
+#
+#linear mixing model to get reosurce reliance, need to make sure to adjust N numbers for trophic fractionation#
+linearMM<-function(Em,zoopC, zoopN){#
+	fPhyto<-((Em[6]-Em[4])*(zoopC-Em[3])-(Em[5]-Em[3])*(zoopN-Em[4]))/((Em[6]-Em[4])*(Em[1]-Em[3])-(Em[5]-Em[3])*(Em[2]-Em[4]))#
+	fTerr<-((zoopC-Em[5])-(Em[1]-Em[5])*fPhyto)/(Em[3]-Em[5])#
+	fCH4<-1-fPhyto-fTerr#
+	out<-c(fPhyto=fPhyto,fTerr=fTerr,fCH4=fCH4)#
+	return(out)#
+}#
+#
+#trophic fractionation ->use 2 for all zooplankton, 3 for Chaoborus...TLfrac=somewhere between 2.5 and 3.1#
+TLfrac=2.5#
+#
+resource.reliance<-c()#
+for(i in 1:nrow(iso.zoop)){#
+	if(iso.zoop$taxa[i]=='chaoborus'){#
+		TL=3#
+	}#
+	else if(iso.zoop$taxa[i]!='chaoborus'){#
+		TL=2#
+	}#
+	em<-endMember(lakeID=iso.zoop$lakeID[i],year=iso.zoop$year[i])#
+	zoopC<-iso.zoop$d13C[i]#
+	zoopN<-iso.zoop$d15N[i]-TL*TLfrac#
+	out<-linearMM(Em=em,zoopC=zoopC,zoopN=zoopN)#
+	resource.reliance<-rbind(resource.reliance,out)#
+}#
+colnames(resource.reliance)<-c('fPhyto','fTerr','fMeth')#
+#
+#add resource reliance to iso.zoop#
+zoop.rr<-cbind(iso.zoop,resource.reliance)#
+#
+#fix names#
+zoop.rr$taxa<-tolower(zoop.rr$taxa)#
+zoop.rr$taxa[zoop.rr$taxa=='zoops']='all zoops'
+head(zoop.rr)
+boxplot(zoop.rr$fTerr~zoop.rr$lakeID*zoop.rr$year)
+quartz()
+boxplot(zoop.rr$d13C~zoop.rr$lakeID*zoop.rr$year)
+quartz()
+boxplot(zoop.rr$d15N~zoop.rr$lakeID*zoop.rr$year)
+boxplot(zoop.rr$fTerr[zoop.rr$taxa=='daphnia']~zoop.rr$lakeID[zoop.rr$taxa=='daphnia']*zoop.rr$year[zoop.rr$taxa=='daphnia'])
+boxplot(zoop.rr$fTerr[zoop.rr$taxa=='copepods']~zoop.rr$lakeID[zoop.rr$taxa=='copepods']*zoop.rr$year[zoop.rr$taxa=='copepods'])
+boxplot(zoop.rr$fTerr[zoop.rr$taxa=='daphnia' | zoop.rr$taxa=='holopedium']~zoop.rr$lakeID[zoop.rr$taxa=='daphnia' | zoop.rr$taxa=='holopedium']*zoop.rr$year[zoop.rr$taxa=='daphnia' | zoop.rr$taxa=='holopedium'])
+#Script that runs autoregressive intervention analysis using Powers et al. (2013) methods#
 #Patrick Kelly 13 January 2014#
 #
 #load zooplankton data#
@@ -16,523 +778,401 @@ setwd('~/Documents/Notre Dame/long lake data/MAR data')#
 #
 zoops<-read.csv('zoopDataMatrix2011-2014.csv')#
 #
-#load covariate data#
-cov.mat<-read.csv('covariateData2011-2014.csv')#
+#need to match reference and treatment basin taxa and date#
+#two data frames of East and West, then match East with west and subtract in the form Y=Co-CI, were Co is tretment, CI is reference#
 #
-#combine the two to sort#
-tot.data<-cbind(zoops,cov.mat[2:ncol(cov.mat)])#
+zoops.el<-zoops[zoops$lakeID=='EL',]#
+zoops.wl<-zoops[zoops$lakeID=='WL',]#
 #
-#sort by date#
-tot.data<-tot.data[order(tot.data$lakeID,tot.data$dateSample),]#
-#make lake-year ID#
-tot.data$year<-format(as.Date(tot.data$dateSample,'%Y-%m-%d'),'%Y')#
-tot.data$lake.year<-paste(tot.data$lakeID,format(as.Date(tot.data$dateSample,'%Y-%m-%d'),'%Y'),sep='.')#
-lake.year<-c(tot.data$lake.year[tot.data$lakeID=='EL'],tot.data$lake.year[tot.data$lakeID=='WL'])#
-#
-#remove NAs#
-tot.data<-tot.data[!is.na(tot.data$cyclopoid.gm2),]#
-tot.data<-tot.data[!is.na(tot.data$holhopedium.gm2),]#
-#
-#build a matrix of data with 3 taxa#
-tsMat<-as.matrix(tot.data[,6:8],ncol=3)#
-#
-#make X and Y#
-X=tsMat[1:nrow(tsMat)-1,] # this is Xt#
-Y=tsMat[2:nrow(tsMat),] #this is Xt+1#
-#
-#make covariate matrix#
-covMat<-as.matrix(tot.data[,9:14],ncol=6)#
-covMat<-covMat[1:nrow(covMat)-1,]#
-#
-#remove transition year data points in both X, Y, and covariate data#
-WLyearX<-tot.data$year[tot.data$lakeID=='WL'][1:length(tot.data$year[tot.data$lakeID=='WL'])-1]#
-WLyearY<-tot.data$year[tot.data$lakeID=='WL'][2:length(tot.data$year[tot.data$lakeID=='WL'])]#
-#
-X<-X[WLyearX==WLyearY,]#
-Y<-Y[WLyearX==WLyearY,]#
-covMat<-covMat[WLyearX==WLyearY,]#
-#
-#make z-scored matrix to find effect sizes#
-col.mean<-colMeans(covMat) #get means for columns#
-col.sd<-apply(covMat,2,sd)#
-#
-z.covMat<-c()#
-for(i in 1:nrow(covMat)){#
-	x<-(covMat[i,]-col.mean)/col.sd#
-	z.covMat<-rbind(z.covMat,x)#
+#add daphnia, cyclopoid, and holopedium data frames from WL to EL#
+wlZoops<-c()#
+for(i in 1:nrow(zoops.el)){#
+	rowi<-match(zoops.el$dateSample[i],zoops.wl$dateSample)#
+	x<-zoops.wl[rowi,c(6,7,8)]#
+	wlZoops<-rbind(wlZoops,x)#
 }#
+colnames(wlZoops)<-c('daph.wl','cyc.wl','holo.wl')#
 #
-one<-rep(1,nrow(X)) #1 in the model#
+tot.zoops<-cbind(zoops.el,wlZoops)#
 #
-Z<-cbind(one,X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix#
+#get Y for each taxa by subtracting reference from treatment#
+daph.Y<-tot.zoops$daphnia.gm2-tot.zoops$daph.wl#
+cyclo.Y<-tot.zoops$cyclopoid.gm2-tot.zoops$cyc.wl#
+holo.Y<-tot.zoops$holhopedium.gm2-tot.zoops$holo.wl#
 #
-#estimate parameters using CLS#
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%Y
-D
-#calculate predicted #
-predict<-Z%*%D#
-#Q=length of time series#
-#P=number of species#
-#R=number of coviates#
-#E=errors (predict-X)#
-#varY=variance in Y=obs-mean#
-#root mean squared error sd(E)#
+#add date to get final Y data frame#
+Y<-data.frame(dateSample=tot.zoops$dateSample,daphnia=daph.Y,cyclopoid=cyclo.Y,holopedium=holo.Y)#
 #
-Q<-nrow(X)#
-P<-ncol(X)#
-R<-0#
-E<-predict-Y#
-rmse<-sd(E)#
-varY=matrix(c(Y[,1]-mean(Y[,1]),Y[,2]-mean(Y[,2]),Y[,3]-mean(Y[,3])),ncol=3)#
+#order Y by date#
+Y<-Y[order(Y$dateSample),]#
 #
-sigma<-t(E)%*%E/Q#
-lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#add year to Y data frame#
+Y$year<-format(as.Date(Y$dateSample,'%Y-%m-%d'),'%Y')#
 #
-#calculate total r2#
-varMatrix<-t(varY)%*%varY/Q#
-R2<-1-diag(sigma)/diag(varMatrix)
-R2
-#calculate r^2 based on dY's#
-varDY=(Y-X)[-1,]#
-DYhat=c()#
-for(i in 2:nrow(predict)){#
-	x=predict[i,]-predict[i-1,]#
-	DYhat=rbind(DYhat,x)#
+#make Yt and Yt+1#
+Yt<-Y[1:nrow(Y)-1,]#
+Ytplus1<-Y[2:nrow(Y),]#
+#
+#remove NAs -> need to do all of this for each taxa#
+Yt.daphnia<-Yt[!is.na(Yt$daphnia),c(1,2,5)]#
+Yt.cyclopoid<-Yt[!is.na(Yt$cyclopoid),c(1,3,5)]#
+Yt.holopedium<-Yt[!is.na(Yt$holopedium),c(1,4,5)]#
+#
+Ytplus1.daphnia<-Ytplus1[!is.na(Ytplus1$daphnia),c(1,2,5)]#
+Ytplus1.cyclopoid<-Ytplus1[!is.na(Ytplus1$cyclopoid),c(1,3,5)]#
+Ytplus1.holopedium<-Ytplus1[!is.na(Ytplus1$holopedium),c(1,4,5)]#
+#
+Mi.daphnia<-rep(0,nrow(Yt.daphnia))#
+Mi.daphnia[Yt.daphnia$year==2013 | Yt.daphnia$year==2014]=1#
+Mi.cyclopoid<-rep(0,nrow(Yt.cyclopoid))#
+Mi.cyclopoid[Yt.cyclopoid$year==2013 | Yt.cyclopoid$year==2014]=1#
+Mi.holopedium<-rep(0,nrow(Yt.holopedium))#
+Mi.holopedium[Yt.holopedium$year==2013|Yt.holopedium$year==2014]=1#
+#
+#remove transition year#
+Yt.year<-Yt.daphnia$year#
+Ytplus1.year<-Ytplus1.daphnia$year#
+Yt.daphnia<-as.matrix(Yt.daphnia[Yt.year==Ytplus1.year,2])#
+Ytplus1.daphnia<-as.matrix(Ytplus1.daphnia[Yt.year==Ytplus1.year,2])#
+Mi.daphnia<-Mi.daphnia[Yt.year==Ytplus1.year]#
+#
+Yt.year<-Yt.cyclopoid$year#
+Ytplus1.year<-Ytplus1.cyclopoid$year#
+Yt.cyclopoid<-as.matrix(Yt.cyclopoid[Yt.year==Ytplus1.year,2])#
+Ytplus1.cyclopoid<-as.matrix(Ytplus1.cyclopoid[Yt.year==Ytplus1.year,2])#
+Mi.cyclopoid<-Mi.cyclopoid[Yt.year==Ytplus1.year]#
+#
+Yt.year<-Yt.holopedium$year#
+Ytplus1.year<-Ytplus1.holopedium$year#
+Yt.holopedium<-as.matrix(Yt.holopedium[Yt.year==Ytplus1.year,2])#
+Ytplus1.holopedium<-as.matrix(Ytplus1.holopedium[Yt.year==Ytplus1.year,2])#
+Mi.holopedium<-Mi.holopedium[Yt.year==Ytplus1.year]
+daphnia.simple<-glm(Ytplus1.daphnia~1)
+daphnia.simple
+daphnia.auto<-glm(Ytplus1.daphnia~Yt.daphnia)
+daphnia.auto
+daphnia.treatment<-glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia)
+daphnia.treatment
+#Script that runs autoregressive intervention analysis using Powers et al. (2013) methods#
+#Patrick Kelly 13 January 2014#
+#
+#load zooplankton data#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+#
+zoops<-read.csv('zoopDataMatrix2011-2014.csv')#
+#
+#need to match reference and treatment basin taxa and date#
+#two data frames of East and West, then match East with west and subtract in the form Y=Co-CI, were Co is tretment, CI is reference#
+#
+zoops.el<-zoops[zoops$lakeID=='EL',]#
+zoops.wl<-zoops[zoops$lakeID=='WL',]#
+#
+#add daphnia, cyclopoid, and holopedium data frames from WL to EL#
+wlZoops<-c()#
+for(i in 1:nrow(zoops.el)){#
+	rowi<-match(zoops.el$dateSample[i],zoops.wl$dateSample)#
+	x<-zoops.wl[rowi,c(6,7,8)]#
+	wlZoops<-rbind(wlZoops,x)#
 }#
+colnames(wlZoops)<-c('daph.wl','cyc.wl','holo.wl')#
 #
-E_D<-DYhat-varDY#
+tot.zoops<-cbind(zoops.el,wlZoops)#
 #
-QD<-nrow(Y)#
-varMatrix_D<-t(varDY)%*%varDY/Q#
-R2_D<-diag(sigma)/diag(varMatrix_D)
-R2_D
-mean(X)
-sd(X)
-X
-col.mean<-colMeans(X)
-col.mean
-col.sd<-apply(X,2,sd)
-col.sd
-col.mean<-colMeans(X)#
-col.sd<-apply(X,2,sd)#
+#get Y for each taxa by subtracting reference from treatment#
+daph.Y<-tot.zoops$daphnia.gm2-tot.zoops$daph.wl#
+cyclo.Y<-tot.zoops$cyclopoid.gm2-tot.zoops$cyc.wl#
+holo.Y<-tot.zoops$holhopedium.gm2-tot.zoops$holo.wl#
 #
-z.X<-c()#
-for(i in 1:nrow(X)){#
-	x<-(X[i,]-col.mean)/col.sd#
-	z.X<-rbind(z.X,x)#
-}#
+#add date to get final Y data frame#
+Y<-data.frame(dateSample=tot.zoops$dateSample,daphnia=daph.Y,cyclopoid=cyclo.Y,holopedium=holo.Y)#
 #
-col.mean<-colMeans(Y)#
-col.sd<-apply(Y,2,sd)#
+#order Y by date#
+Y<-Y[order(Y$dateSample),]#
 #
-z.Y<-c()#
-for(i in 1:nrow(X)){#
-	x<-(Y[i,]-col.mean)/col.sd#
-	z.Y<-rbind(z.Y,x)#
+#add year to Y data frame#
+Y$year<-format(as.Date(Y$dateSample,'%Y-%m-%d'),'%Y')#
+#
+#make Yt and Yt+1#
+Yt<-Y[1:nrow(Y)-1,]#
+Ytplus1<-Y[2:nrow(Y),]#
+#
+#remove NAs -> need to do all of this for each taxa#
+Yt.daphnia<-Yt[!is.na(Yt$daphnia),c(1,2,5)]#
+Yt.cyclopoid<-Yt[!is.na(Yt$cyclopoid),c(1,3,5)]#
+Yt.holopedium<-Yt[!is.na(Yt$holopedium),c(1,4,5)]#
+#
+Ytplus1.daphnia<-Ytplus1[!is.na(Ytplus1$daphnia),c(1,2,5)]#
+Ytplus1.cyclopoid<-Ytplus1[!is.na(Ytplus1$cyclopoid),c(1,3,5)]#
+Ytplus1.holopedium<-Ytplus1[!is.na(Ytplus1$holopedium),c(1,4,5)]#
+#
+Mi.daphnia<-rep(0,nrow(Yt.daphnia))#
+Mi.daphnia[Yt.daphnia$year==2013 | Yt.daphnia$year==2014]=1#
+Mi.daphnia.2<-rep(0,nrow(Yt.daphnia))#
+Mi.daphnia.2[Yt.daphnia$year==2014]=1
+Mi.daphnia.2
+Mi.daphnia
+Mi.daphnia.2+Mi.daphnia
+Mi.daphnia.2<-Mi.daphnia.2+Mi.daphnia
+Mi.daphnia.2<-Mi.daphnia.2[Yt.year==Ytplus1.year]
+Mi.daphnia.2
+daphnia.year<-glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia+Mi.daphnia.2)
+Ytplus1.daphnia
+Yt.year<-Yt.daphnia$year#
+Ytplus1.year<-Ytplus1.daphnia$year#
+Yt.daphnia<-as.matrix(Yt.daphnia[Yt.year==Ytplus1.year,2])#
+Ytplus1.daphnia<-as.matrix(Ytplus1.daphnia[Yt.year==Ytplus1.year,2])#
+Mi.daphnia<-Mi.daphnia[Yt.year==Ytplus1.year]#
+Mi.daphnia.2<-Mi.daphnia.2[Yt.year==Ytplus1.year]
+daphnia.year<-glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia+Mi.daphnia.2)
+daphnia.year
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
+zoops<-read.csv('zoopData_2011_2014.csv')
+zoops<-read.csv('zoopData2011_2014.csv')
+zoops
+zoops<-zoops[zops$lakeID=='EL' | zoops$lakeID=='WL',]
+zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]
+unique(zoops$dateSample[zoops$lakeID=='EL'])
+unique(zoops$dateSample[zoops$lakeID=='WL'])
+unique(zoops$dateSample[zoops$lakeID=='WL'])[order(unique(zoops$dateSample[zoops$lakeID=='WL']))]
+unique(zoops$dateSample[zoops$lakeID=='EL'])[order(unique(zoops$dateSample[zoops$lakeID=='EL']))]
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')
+boxplot(zoop.rr$fTerr~zoop.rr$lakeID*zoop.rr$year)
+boxplot(zoop.rr$fTerr[zoop.rr$taxa=='daphnia' | zoop.rr$taxa=='holopedium']~zoop.rr$lakeID[zoop.rr$taxa=='daphnia' | zoop.rr$taxa=='holopedium']*zoop.rr$year[zoop.rr$taxa=='daphnia' | zoop.rr$taxa=='holopedium'])
+biPlot<-function(lake, year, taxa){#
+	end.member<-endMember(lake,year)#
+	zoops<-zoop.rr[zoop.rr$lakeID==lake & zoop.rr$taxa==taxa & zoop.rr$year==year,]#
+	quartz()#
+	plot(end.member[1],end.member[2],xlab=expression(paste(delta^13,'C')),ylab=expression(paste(delta^15,'N')),xlim=c(-70,-15),ylim=c(-10,10),pch=19,col='green',cex=2,main=paste(lake, year, taxa, sep=' '))#
+	points(end.member[3],end.member[4],pch=19,cex=2,col='brown')#
+	points(end.member[5],end.member[6],pch=19,cex=2,col='black')#
+	points(zoops$d13C,zoops$d15N-(TLfrac*2),pch=15,col='blue')#
+	legend('topleft',pch=c(19,19,19,15),col=c('green','brown','black','blue'),legend=c('phyt','terr','meth','zoops'))#
+	text(-60,-5,paste('fTerr = ',mean(zoops$fTerr),sep=''))#
+	text(-60,-6,paste('fPhyt = ',mean(zoops$fPhyt),sep=''))#
+	text(-60,-7,paste('fMeth = ',mean(zoops$fMeth),sep=''))#
 }
-X
-Y
-one<-rep(1,nrow(X)) #1 in the model
-Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix
-Z
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
-D
-round(D,digits=4)
-setwd('~/Desktop')
-round.D<-round(D,digits=4)
-prod
-tot.prod
-tot.prod$production.g.m2.yr[tot.prod$lakeID=='EL']/tot.prod$production.g.m2.yr[tot.prod$lakeID=='WL']
-D
-getwd()
-write.csv(D,'MARoutputTable.csv')
-prod.ratio<-tot.prod$production.g.m2.yr[tot.prod$lakeID=='EL']/tot.prod$production.g.m2.yr[tot.prod$lakeID=='WL']
-ratio.table<-data.frame(year=c(2011,2012,2013,2014),poduction.ratio.EL:WL=prod.ratio)
-ratio.table<-data.frame(year=c(2011,2012,2013,2014),poduction.ratio.EL.WL=prod.ratio)
-ratio.table
-write.csv(ratio.table,'EL.WLratio.csv')
-#calculate predicted #
-predict<-Z%*%D#
-#Q=length of time series#
-#P=number of species#
-#R=number of coviates#
-#E=errors (predict-X)#
-#varY=variance in Y=obs-mean#
-#root mean squared error sd(E)#
-#
-Q<-nrow(X)#
-P<-ncol(X)#
-R<-0#
-E<-predict-Y#
-rmse<-sd(E)#
-varY=matrix(c(Y[,1]-mean(Y[,1]),Y[,2]-mean(Y[,2]),Y[,3]-mean(Y[,3])),ncol=3)#
-#
-sigma<-t(E)%*%E/Q#
-lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
-#
-#calculate total r2#
-varMatrix<-t(varY)%*%varY/Q#
-R2<-1-diag(sigma)/diag(varMatrix)#
-#
-#calculate r^2 based on dY's#
-varDY=(Y-X)[-1,]#
-DYhat=c()#
-for(i in 2:nrow(predict)){#
-	x=predict[i,]-predict[i-1,]#
-	DYhat=rbind(DYhat,x)#
-}#
-#
-E_D<-DYhat-varDY#
-#
-QD<-nrow(Y)#
-varMatrix_D<-t(varDY)%*%varDY/Q#
-R2_D<-diag(sigma)/diag(varMatrix_D)
-R2
-R2_D
-head(z.covMat)
-#calculate predicted #
-predict<-Z%*%D#
-#Q=length of time series#
-#P=number of species#
-#R=number of coviates#
-#E=errors (predict-X)#
-#varY=variance in Y=obs-mean#
-#root mean squared error sd(E)#
-#
-Q<-nrow(X)#
-P<-ncol(X)#
-R<-ncol(z.covMat)#
-E<-predict-Y#
-rmse<-sd(E)#
-varY=matrix(c(Y[,1]-mean(Y[,1]),Y[,2]-mean(Y[,2]),Y[,3]-mean(Y[,3])),ncol=3)#
-#
-sigma<-t(E)%*%E/Q#
-lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
-#
-#calculate total r2#
-varMatrix<-t(varY)%*%varY/Q#
-R2<-1-diag(sigma)/diag(varMatrix)
-R2
-lnlike
-#calculate r^2 based on dY's#
-varDY=(Y-X)[-1,]#
-DYhat=c()#
-for(i in 2:nrow(predict)){#
-	x=predict[i,]-predict[i-1,]#
-	DYhat=rbind(DYhat,x)#
-}#
-#
-E_D<-DYhat-varDY#
-#
-QD<-nrow(Y)#
-varMatrix_D<-t(varDY)%*%varDY/Q#
-R2_D<-diag(sigma)/diag(varMatrix_D)
-R2_D
-diag(varMatrix)
-1-diag(sigma)
-R2<-(1-diag(sigma))/diag(varMatrix)
-R2
-R2<-1-diag(sigma)/diag(varMatrix)
-R2
-Z%*%D
-E
-sd(E)
-head(Y)
-t(E)%*%E/Q
-R2
-R2_D
-prod
-prod$uniqueID<-paste(prod$lakeID,prod$year,sep='.')
-uniques<-unique(prod$uniqueID)
-uniques
-percent.prod<-c()#
-for(i in 1:length(uniques)){#
-	lakei<-prod[prod$uniqueID==uniques[i],]#
-	tot<-sum(lakei$production.g.m2.yr)#
-	for(j in 1:nrow(lakei)){#
-		x[j]<-lakei$production.g.m2.yr[j]/tot#
-	}#
-	percent.prod<-c(percent.prod,x)#
+biPlot('EL',2012,'daphnia')
+setwd('~/Documents/Notre Dame/')
+list.files()
+setwd('~/Documents/Notre Dame/Katie Baglini Data Spril 2011')
+setwd('~/Documents/Notre Dame/Katie Baglini Data Spring 2011')
+list.files()
+setwd('~/Documents/Notre Dame/Katie Baglini Data Spring 2011/R data')
+list.files()
+lengths<-read.csv('ZoopLengths2011.csv')
+head(lengths)
+LWregression<-read.csv('LWregressions2.csv')
+head(LWregression)
+mass<-c()#
+for(i in 1:nrow(lengths)){#
+	row<-match(lengths$taxa[i],LWregression$taxa)#
+	mass[i]<-exp(LWregression$b[rowi]+(LWregression$m[rowi]*log(lengths$length[i])))#
 }
-percent.prod
-length(percent.prod)
-nrow(prod)
+head(mass)
 i=1
-lakei<-prod[prod$uniqueID==uniques[i],]
-lakei
-tot<-sum(lakei$production.g.m2.yr)
-tot
-for(j in 1:nrow(lakei)){#
-		x[j]<-lakei$production.g.m2.yr[j]/tot#
-	}
-x
-percent.prod<-c()#
-for(i in 1:length(uniques)){#
-	lakei<-prod[prod$uniqueID==uniques[i],]#
-	tot<-sum(lakei$production.g.m2.yr)#
-	x<-c()#
-	for(j in 1:nrow(lakei)){#
-		x[j]<-lakei$production.g.m2.yr[j]/tot#
+match(lengths$taxa[i],LWregression$taxa)
+exp(LWregression$b[rowi]+(LWregression$m[rowi]*log(lengths$length[i])))
+LWregression$b[rowi]
+LWregression
+LWregression$b
+mass<-c()#
+for(i in 1:nrow(lengths)){#
+	rowi<-match(lengths$taxa[i],LWregression$taxa)#
+	mass[i]<-exp(LWregression$b[rowi]+(LWregression$m[rowi]*log(lengths$length[i])))#
+}
+head(mass)
+lengths$mass.ug<-mass
+wl<-lengths[lengths$lakeID=='WL',]
+head(wl)
+wl<-lengths[lengths$lake=='WL',]
+head(wl)
+wl<-lengths[lengths$lake=='WL' & lengths$date=='06/15/11',]
+wl
+tapply(wl$mass,wl$taxa,mean)
+setwd('~/Documents/Notre Dame/long lake data/')
+list.files()
+setwd('~/Documents/Notre Dame/long lake data/2013 Production files')
+list.files()
+read.xlsx('longLakeZoopLengths.xlsx',1)
+list.files()
+lengths<-read.xlsx('longLakeZoopLengths.xlsx',1)
+setwd('~/Documents/Notre Dame/long lake data/2013 Production files/R files')
+head(lengths)
+list.files()
+LWregression<-read.csv('LWregressions.csv')
+LWregression
+mass<-c()#
+for(i in 1:nrow(lengths)){#
+	rowi<-match(lengths$taxa[i],LWregression$taxa)#
+	mass[i]<-exp(LWregression$b[rowi]+(LWregression$m[rowi]*log(lengths$length[i])))#
+}#
+lengths$mass.ug<-mass
+head(lengths)
+el<-lengths[lengths$lakeID=='EL' & lengths$dateSample=='2013-07-10',]
+head(el)
+tapply(el$mass.ug,el$taxa,mean,na.rm=T)
+setwd('~/Documents/Notre Dame/long lake data/2014 Production files')
+setwd('~/Documents/Notre Dame/long lake data/')
+list.files()
+setwd('~/Documents/Notre Dame/long lake data/2014 Long Lake data')
+list.files()
+lengths<-read.csv('LLlengths2014.xlsx')
+lengths<-read.csv('LLlengths2014.xlsx',1)
+setwd('~/Documents/Notre Dame/long lake data/csv files')
+setwd('~/Documents/Notre Dame/long lake data/2014 Long Lake data/csv files')
+list.files()
+lengths<-read.xlsx('LLlengths2014.xlsx',1)
+setwd('~/Documents/Notre Dame/long lake data/2014 Long Lake data')
+lengths<-read.xlsx('LLlengths2014.xlsx',1)
+mass<-c()#
+for(i in 1:nrow(lengths)){#
+	rowi<-match(lengths$taxa[i],LWregression$taxa)#
+	mass[i]<-exp(LWregression$b[rowi]+(LWregression$m[rowi]*log(lengths$length[i])))#
+}#
+lengths$mass.ug<-mass
+head(lengths)
+el<-lengths[lengths$lakeID=='EL',]
+tapply(el$mass.ug,el$taxa,mean,na.rm=T)
+Lregression
+LWregression
+)
+unique(lengths$taxa)
+lengths$taxa<-tolower(lengths$taxa)
+head(lengths)
+mass<-c()#
+for(i in 1:nrow(lengths)){#
+	rowi<-match(lengths$taxa[i],LWregression$taxa)#
+	mass[i]<-exp(LWregression$b[rowi]+(LWregression$m[rowi]*log(lengths$length[i])))#
+}#
+lengths$mass.ug<-mass#
+#
+el<-lengths[lengths$lakeID=='EL',]
+head(lengths)
+head(el)
+tapply(el$mass.ug,el$taxa,mean,na.rm=T)
+wl<-lengths[lengths$lakeID=='WL',]
+unique(wl$dateSample)
+tapply(wl$mass.ug,wl$taxa,mean,na.rm=T)
+#load zooplankton data#
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoops<-read.csv('zoopData2011_2014.csv')#
+#
+#use only east and west long data#
+zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]#
+#
+#make areal biomass column#
+zoops$biomass_gDryMass_m2<-(zoops$abundance_num_m3*zoops$depthBottom)*(zoops$meanMass_ug/1000000)#
+#
+#make uniqueID to match samples together#
+zoops$uniqueID<-paste(zoops$lakeID,zoops$dateSample,sep='.')#
+#
+#make frame of daphnia#
+daphnia<-zoops[zoops$taxa=='daphnia',]#
+#
+#make frame of cyclopoids#
+cyclopoid<-zoops[zoops$taxa=='cyclopoid',]#
+#
+#make frame of holopedium#
+holopedium<-zoops[zoops$taxa=='holopedium',]#
+#
+zoop.data<-c()#
+for(i in 1:nrow(daphnia)){#
+	rowi<-match(daphnia$uniqueID[i],cyclopoid$uniqueID)#
+	cyc<-cyclopoid$biomass_gDryMass_m2[rowi]#
+	rowj<-match(daphnia$uniqueID[i],holopedium$uniqueID)#
+	holo<-holopedium$biomass_gDryMass_m2[rowj]#
+	x<-data.frame(lakeID=daphnia$lakeID[i],dateSample=daphnia$dateSample[i],depthBottom=daphnia$depthBottom[i],uniqueID=daphnia$uniqueID[i],daphnia.gm2=daphnia$biomass_gDryMass_m2[i],cyclopoid.gm2=cyc,holhopedium.gm2=holo)#
+	zoop.data<-rbind(x,zoop.data)#
+}#
+#
+#save to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+#
+write.csv(zoop.data,'zoopDataMatrix2011-2014.csv')
+#load chaoborus data#
+setwd('~/Documents/Notre Dame/long lake data/chaoborus data')#
+chaob<-read.csv('chaoborusDataLongLake2011-2014.csv')#
+#
+#fix date to match zooplankton data#
+chaob$dateSample<-format(as.Date(chaob$dateSample,'%m/%d/%y'),'%Y-%m-%d')#
+#
+#make new uniqueID#
+chaob$uniqueID<-paste(chaob$lakeID,chaob$dateSample,sep='.')#
+#
+#load water chemistry data#
+setwd('~/Documents/Notre Dame/long lake data/covariate data')#
+doc<-read.csv('doc_2011-2014FINAL.csv')#
+tp<-read.csv('tp_2011-2014FINAL.csv')#
+chl<-read.csv('chl_2011-2014FINAL.csv')#
+stoich<-read.csv('pocStoich_2011-2014.csv')#
+#
+#fix dates on all of them#
+doc$dateSample<-format(as.Date(doc$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+doc$uniqueID<-paste(doc$lakeID,doc$dateSample,sep='.')#
+#
+tp$dateSample<-format(as.Date(tp$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+tp$uniqueID<-paste(tp$lakeID,tp$dateSample,sep='.')#
+#
+chl$dateSample<-format(as.Date(chl$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+chl$uniqueID<-paste(chl$lakeID,chl$dateSample,sep='.')#
+#
+stoich$dateSample<-format(as.Date(stoich$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+stoich$uniqueID<-paste(stoich$lakeID,stoich$dateSample,sep='.')#
+#
+#Get temperature data#
+temp<-read.csv('epiTemp2011-2014.csv')#
+temp$uniqueID<-paste(temp$lakeID,temp$dateSample,sep='.')#
+#
+cov.mat<-c()#
+for(i in 1:nrow(zoop.data)){#
+	row.doc<-match(zoop.data$uniqueID[i],doc$uniqueID)#
+	row.tp<-match(zoop.data$uniqueID[i],tp$uniqueID)#
+	row.chl<-match(zoop.data$uniqueID[i],chl$uniqueID)#
+	row.stoich<-match(zoop.data$uniqueID[i],stoich$uniqueID)#
+	row.temp<-match(zoop.data$uniqueID[i],temp$uniqueID)#
+	row.chaob<-match(zoop.data$uniqueID[i],chaob$uniqueID)#
+	x<-data.frame(DOC=doc$DOC[row.doc],TP=tp$TP[row.tp],chl=chl$chl[row.chl],CP=stoich$CP[row.stoich],temp=temp$temp[row.temp],chaob.gm2=chaob$g.m2[row.chaob])#
+	cov.mat<-rbind(cov.mat,x)#
+}#
+#
+#fix non-matching data in the covariate matrix by using the value from the closest date#
+for (i in 1:nrow(cov.mat)){#
+	lake<-zoop.data$lakeID[i]#
+	date<-zoop.data$dateSample[i]#
+	if (is.na(cov.mat$DOC[i])){#
+		lakei=doc[doc$lakeID==lake,]#
+		cov.mat$DOC[i]=lakei$DOC[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
 	}#
-	percent.prod<-c(percent.prod,x)#
-}
-percent.prod
-length(percent.prod)
-prod$percent.prod<-percent.prod
-ggplot(aes(x=prod$year[prod$taxa=='cyclopoid'],y=prod$percent.prod[prod$taxa=='cyclopoid'],fill=prod$lakeID[prod$taxa=='cyclopoid']))+geom_bar(stat='identity')+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-prod$year[prod$taxa=='cyclopoid']
-prod$percent.prod[prod$taxa=='cyclopoid']
-ggplot(aes(x=prod$year[prod$taxa=='cyclopoid'],y=prod$percent.prod[prod$taxa=='cyclopoid']))+geom_bar(stat='identity')+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-prod$percent.prod[prod$taxa=='cyclopoid']
-ggplot(data=prod,aes(x=prod$year[prod$taxa=='cyclopoid'],y=prod$percent.prod[prod$taxa=='cyclopoid'],fill=prod$lakeID[prod$taxa=='cyclopoid']))+geom_bar(stat='identity')+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-cyclopoid.data<-prod[prod$taxa=='cyclopoid',]
-ggplot(data=cyclopoid.data,aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity')+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-ggplot(data=cyclopoid.data,aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-ggplot(data=cyclopoid.data,aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-D
-round(D,4)
-head(z.X)
-head(z.Mat)
-head(z.covMat)
-head(tsMat)
-head(tot.data)
-tsMat<-as.matrix(tot.data[,6:8],ncol=3)
-head(tot.data)
-tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)
-tsMat
-X=tsMat[1:nrow(tsMat)-1,] # this is Xt
-Y=tsMat[2:nrow(tsMat),] #this is Xt+1
-covMat<-as.matrix(tot.data[,9:13],ncol=5)
-covMat<-covMat[1:nrow(covMat)-1,]
-head(X)
-head(covMat)
-#remove transition year data points in both X, Y, and covariate data#
-WLyearX<-tot.data$year[tot.data$lakeID=='WL'][1:length(tot.data$year[tot.data$lakeID=='WL'])-1]#
-WLyearY<-tot.data$year[tot.data$lakeID=='WL'][2:length(tot.data$year[tot.data$lakeID=='WL'])]#
-#
-X<-X[WLyearX==WLyearY,]#
-Y<-Y[WLyearX==WLyearY,]#
-covMat<-covMat[WLyearX==WLyearY,]
-col.mean<-colMeans(covMat) #get means for columns#
-col.sd<-apply(covMat,2,sd)#
-#
-z.covMat<-c()#
-for(i in 1:nrow(covMat)){#
-	x<-(covMat[i,]-col.mean)/col.sd#
-	z.covMat<-rbind(z.covMat,x)#
-}
-#z-score X and Y#
-col.mean<-colMeans(X)#
-col.sd<-apply(X,2,sd)#
-#
-z.X<-c()#
-for(i in 1:nrow(X)){#
-	x<-(X[i,]-col.mean)/col.sd#
-	z.X<-rbind(z.X,x)#
+	if (is.na(cov.mat$TP[i])){#
+		lakei=tp[tp$lakeID==lake,]#
+		cov.mat$TP[i]=lakei$TP[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$chl[i])){#
+		lakei=chl[chl$lakeID==lake,]#
+		cov.mat$chl[i]=lakei$chl[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$CP[i])){#
+		lakei<-stoich[stoich$lakeID==lake & stoich$depthClass=='PML',]#
+		cov.mat$CP[i]=lakei$CP[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if(is.na(cov.mat$temp[i])){#
+		lakei<-temp[temp$lakeID==lake,]#
+		cov.mat$temp[i]=lakei$temp[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$chaob.gm2[i])){#
+		lakei<-chaob[chaob$lakeID==lake,]#
+		cov.mat$chaob.gm2[i]=lakei$g.m2[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
 }#
 #
-col.mean<-colMeans(Y)#
-col.sd<-apply(Y,2,sd)#
+#still some NAs, fix with average values#
+cov.mat$TP[is.na(cov.mat$TP)]=mean(cov.mat$TP,na.rm=T)#
+cov.mat$CP[is.na(cov.mat$CP)]=mean(cov.mat$CP,na.rm=T)#
 #
-z.Y<-c()#
-for(i in 1:nrow(X)){#
-	x<-(Y[i,]-col.mean)/col.sd#
-	z.Y<-rbind(z.Y,x)#
-}#
-#
-one<-rep(1,nrow(X)) #1 in the model
-head(z.X)
-head(z.Y)
-Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
-D
-ound(D,4)
-ound(D,4)
-round(D,4)
-predict<-Z%*%D
-Q<-nrow(X)#
-P<-ncol(X)#
-R<-ncol(z.covMat)#
-E<-predict-z.Y#
-rmse<-sd(E)#
-varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=4)#
-#
-sigma<-t(E)%*%E/Q#
-lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
-#
-#calculate total r2#
-varMatrix<-t(varY)%*%varY/Q#
-R2<-1-diag(sigma)/diag(varMatrix)
-R2
-diag(sigma)
-diag(varMatrix)
-R2<-(1-diag(sigma))/diag(varMatrix)
-R2
-varDY=(z.Y-z.X)[-1,]#
-DYhat=c()#
-for(i in 2:nrow(predict)){#
-	x=predict[i,]-predict[i-1,]#
-	DYhat=rbind(DYhat,x)#
-}#
-#
-E_D<-DYhat-varDY#
-#
-QD<-nrow(z.Y)#
-varMatrix_D<-t(varDY)%*%varDY/Q#
-R2_D<-diag(sigma)/diag(varMatrix_D)
-R2_D
-head(tot.data)
-tot.data<-tot.data[tot.data$lakeID=='EL',]
-tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)
-head(tsMat)
-X=tsMat[1:nrow(tsMat)-1,] # this is Xt#
-Y=tsMat[2:nrow(tsMat),] #this is Xt+1
-covMat<-as.matrix(tot.data[,9:13],ncol=5)#
-covMat<-covMat[1:nrow(covMat)-1,]
-nrow(X)
-nrow(covMat)
-ELyearX<-tot.data$year[tot.data$lakeID=='EL'][1:length(tot.data$year[tot.data$lakeID=='EL'])-1]#
-ELyearY<-tot.data$year[tot.data$lakeID=='EL'][2:length(tot.data$year[tot.data$lakeID=='EL'])]#
-#
-X<-X[ELyearX==ELyearY,]#
-Y<-Y[ELyearX==ELyearY,]#
-covMat<-covMat[ELyearX==ELyearY,]
-#make z-scored matrix to find effect sizes#
-col.mean<-colMeans(covMat) #get means for columns#
-col.sd<-apply(covMat,2,sd)#
-#
-z.covMat<-c()#
-for(i in 1:nrow(covMat)){#
-	x<-(covMat[i,]-col.mean)/col.sd#
-	z.covMat<-rbind(z.covMat,x)#
-}#
-#
-#z-score X and Y#
-col.mean<-colMeans(X)#
-col.sd<-apply(X,2,sd)#
-#
-z.X<-c()#
-for(i in 1:nrow(X)){#
-	x<-(X[i,]-col.mean)/col.sd#
-	z.X<-rbind(z.X,x)#
-}#
-#
-col.mean<-colMeans(Y)#
-col.sd<-apply(Y,2,sd)#
-#
-z.Y<-c()#
-for(i in 1:nrow(X)){#
-	x<-(Y[i,]-col.mean)/col.sd#
-	z.Y<-rbind(z.Y,x)#
-}#
-#
-one<-rep(1,nrow(X)) #1 in the model#
-#
-Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix#
-#
-#estimate parameters using CLS#
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
-D
-round(D,4)
-weekNum<-as.numeric(format(as.Date(tot.data,'%m/%d/%Y')+3),'%U')
-head(tot.data)
-weekNum<-as.numeric(format(as.Date(tot.data$dateSample,'%Y-%m-%d')+3),'%U')
-weekNum
-dt<-as.Date(tot.data$dateSample,'%Y-%m-%d')
-dt
-as.numeric((format(dt+3,'%U')))
-ggplot(data=cyclopoid.data,aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-head(prod)
-daphnia.data<-prod[prod$taxa=='daphnia',]
-ggplot(data=daphnia.data, aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-holopedium.data<-prod[prod$taxa=='holopedium',]
-ggplot(data=holopedium.data, aes(x=year,y=percent.prod,fill=lakeID))+geom_bar(stat='identity',position=position_dodge())+scale_fill_manual(values=c('EL'='blue','WL'='brown'))
-el.data<-prod[prod$lakeID=='EL',]
-ggplot(data=el.data, aes(x=year,y=percent.prod,fill=taxa))+geom_bar(stat='identity')
-prod
-plot(as.Date(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'])
-as.Date(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],'%Y')
-prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid']
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'])
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'])#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],pch=19)
-prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid']
-prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid']
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1))#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],pch=19)
-as.Date(prod$year,'%Y')
-as.Date(as.character(prod$year),'%Y')
-format(as.Date(as.character(prod$year),'%Y'),'%Y')
-plot(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1))
-plot(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='brown')
-points(format(as.Date(as.character(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='blue')
-points(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')
-jitter(points(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown'))
-plot(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='brown')#
-points(format(as.Date(as.character(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='blue')#
-jitter(points(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown'))
-jitter(format(as.Date(as.character(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),'%Y'),'%Y'))
-plot(format(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='brown')
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='brown')
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='brown')
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],'%Y'),'%Y'),prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='blue')
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='blue')
-points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown'))
-points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='daphnia'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='blue')
-points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=16,cex=1.3,col='brown')
-points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=16,cex=1.3,col='brown')
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=16,cex=1.3,col='blue')
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='blue')#
-points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='daphnia'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='blue')#
-points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='blue')
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0.1,0.6),pch=19,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=19,cex=1.3,col='blue')#
-points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='daphnia'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='blue')#
-points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='blue')
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0.1,0.6),pch=19,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=1,cex=1.3,col='blue')#
-points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='daphnia'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=0,cex=1.3,col='blue')#
-points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=2,cex=1.3,col='blue')
-axis(1,at=c(2011,2012,2013,2014))
-plot(prod$year[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='cyclopoid'],ylim=c(0.1,0.6),pch=19,cex=1.3,col='brown',ylab='% production',xlab='year',xaxt='n')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='cyclopoid'],ylim=c(0,1),pch=1,cex=1.3,col='blue')#
-points(jitter(prod$year[prod$lakeID=='EL' & prod$taxa=='daphnia']),prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=15,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='daphnia'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='daphnia'],ylim=c(0,1),pch=0,cex=1.3,col='blue')#
-points(prod$year[prod$lakeID=='EL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='EL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=17,cex=1.3,col='brown')#
-points(prod$year[prod$lakeID=='WL' & prod$taxa=='holopedium'],prod$percent.prod[prod$lakeID=='WL' & prod$taxa=='holopedium'],ylim=c(0,1),pch=2,cex=1.3,col='blue')#
-axis(1,at=c(2011,2012,2013,2014))
-head(zoops)
-test<-rowSums(zoops[,6:8])
-head(test)
-zoops$totalBiomass<-rowSums(zoops[,6:8])
-head(zoops)
-zoops$year<-format(as.Date(zoops$dateSample,'%Y-%m-%d'),'%Y')
-head(zoops)
-boxplot(zoops$totalBiomass~zoops$lakeID*zoops$year)
-boxplot(zoops$totalBiomass~zoops$lakeID*zoops$year,col=rep(c('blue','brown'),4))
-boxplot(zoops$totalBiomass~zoops$lakeID*zoops$year,col=rep(c('brown','blue'),4))
-chaobs
-setwd('~/Documents/Notre Dame//long lake data')
-list.files()
-setwd('~/Documents/Notre Dame//long lake data/FINAL_data')
-list.files()
-setwd('~/Documents/Notre Dame//long lake data/Chaoborus data')
-list.files()
-chaobs<-read.csv('chaoborusDataLongLake2011-2014.csv')
-head(chaobs)
-chaobs$year<-format(as.Date(chaobs$dateSample,'%m/%d/%y'),'%Y')
-head(chaobs)
-boxplot(chaobs$g.m2~chaobs$lakeID*chaobs$year)
-boxplot(chaobs$g.m2~chaobs$lakeID*chaobs$year,col=rep(c('brown','blue'),4))
-head(zoops)
+#save covariate data to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+write.csv(cov.mat,'covariateData2011-2014.csv')
 #load zooplankton data#
 setwd('~/Documents/Notre Dame/long lake data/MAR data')#
 #
@@ -622,46 +1262,6 @@ predict<-Z%*%D#
 Q<-nrow(X)#
 P<-ncol(X)#
 R<-ncol(z.covMat)#
-E<-predict-Y#
-rmse<-sd(E)#
-varY=matrix(c(Y[,1]-mean(Y[,1]),Y[,2]-mean(Y[,2]),Y[,3]-mean(Y[,3])),ncol=3)#
-#
-sigma<-t(E)%*%E/Q#
-lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
-#
-#calculate total r2#
-varMatrix<-t(varY)%*%varY/Q#
-R2<-1-diag(sigma)/diag(varMatrix)#
-#
-#calculate r^2 based on dY's#
-varDY=(Y-X)[-1,]#
-DYhat=c()#
-for(i in 2:nrow(predict)){#
-	x=predict[i,]-predict[i-1,]#
-	DYhat=rbind(DYhat,x)#
-}#
-#
-E_D<-DYhat-varDY#
-#
-QD<-nrow(Y)#
-varMatrix_D<-t(varDY)%*%varDY/Q#
-R2_D<-diag(sigma)/diag(varMatrix_D)
-D
-round(D,4)
-round.D<-round(D,4)
-write.csv(round.D,'MARcoefficients_EL&WL.csv')
-R2
-predict<-Z%*%D#
-#Q=length of time series#
-#P=number of species#
-#R=number of coviates#
-#E=errors (predict-X)#
-#varY=variance in Y=obs-mean#
-#root mean squared error sd(E)#
-#
-Q<-nrow(X)#
-P<-ncol(X)#
-R<-ncol(z.covMat)#
 E<-predict-z.Y#
 rmse<-sd(E)#
 varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=3)#
@@ -671,9 +1271,9 @@ lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
 #
 #calculate total r2#
 varMatrix<-t(varY)%*%varY/Q#
-R2<-1-diag(sigma)/diag(varMatrix)
-D
-R2
+R2<-1-diag(sigma)/diag(varMatrix)#
+#
+#calculate r^2 based on dY's#
 varDY=(z.Y-z.X)[-1,]#
 DYhat=c()#
 for(i in 2:nrow(predict)){#
@@ -685,8 +1285,13 @@ E_D<-DYhat-varDY#
 #
 QD<-nrow(Y)#
 varMatrix_D<-t(varDY)%*%varDY/Q#
-R2_D<-diag(sigma)/diag(varMatrix_D)
-R2_D
+R2_D<-diag(sigma)/diag(varMatrix_D)#
+#
+#things to try: include chaobs as a taxa, use GPP instead of chlorophyll, just do East Long#
+#RIA on chaoborus#
+#
+#First: include chaobs in taxa#
+#build a matrix of data with 4 taxa#
 tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)#
 #
 #make X and Y#
@@ -739,29 +1344,412 @@ one<-rep(1,nrow(X)) #1 in the model#
 Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix#
 #
 #estimate parameters using CLS#
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
-D
-round.D<-round(D,4)
-write.csv(round.D,'MARcoeffs_chaobsTaxa.csv')
-tot.data<-tot.data[tot.data$lakeID=='EL',]#
+D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y#
 #
-tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)#
+#calculate predicted #
+predict<-Z%*%D#
+#Q=length of time series#
+#P=number of species#
+#R=number of coviates#
+#E=errors (predict-X)#
+#varY=variance in Y=obs-mean#
+#root mean squared error sd(E)#
+#
+Q<-nrow(X)#
+P<-ncol(X)#
+R<-ncol(z.covMat)#
+E<-predict-z.Y#
+rmse<-sd(E)#
+varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=4)#
+#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+#calculate total r2#
+varMatrix<-t(varY)%*%varY/Q#
+R2<-(1-diag(sigma))/diag(varMatrix)#
+#
+#calculate r^2 based on dY's#
+varDY=(z.Y-z.X)[-1,]#
+DYhat=c()#
+for(i in 2:nrow(predict)){#
+	x=predict[i,]-predict[i-1,]#
+	DYhat=rbind(DYhat,x)#
+}#
+#
+E_D<-DYhat-varDY#
+#
+QD<-nrow(z.Y)#
+varMatrix_D<-t(varDY)%*%varDY/Q#
+R2_D<-diag(sigma)/diag(varMatrix_D)
+D
+X
+Y
+zoops<-read.csv('zoopDataMatrix2011-2014.csv')
+zoops
+cov.mat
+#load chaoborus data#
+setwd('~/Documents/Notre Dame/long lake data/chaoborus data')#
+chaob<-read.csv('chaoborusDataLongLake2011-2014.csv')#
+#
+#fix date to match zooplankton data#
+chaob$dateSample<-format(as.Date(chaob$dateSample,'%m/%d/%y'),'%Y-%m-%d')#
+#
+#make new uniqueID#
+chaob$uniqueID<-paste(chaob$lakeID,chaob$dateSample,sep='.')
+chaob
+head(chaob)
+setwd('~/Documents/Notre Dame/long lake data/covariate data')#
+doc<-read.csv('doc_2011-2014FINAL.csv')#
+tp<-read.csv('tp_2011-2014FINAL.csv')#
+chl<-read.csv('chl_2011-2014FINAL.csv')#
+stoich<-read.csv('pocStoich_2011-2014.csv')
+head(oop.data)
+head(zoop.data)
+#fix dates on all of them#
+doc$dateSample<-format(as.Date(doc$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+doc$uniqueID<-paste(doc$lakeID,doc$dateSample,sep='.')#
+#
+tp$dateSample<-format(as.Date(tp$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+tp$uniqueID<-paste(tp$lakeID,tp$dateSample,sep='.')#
+#
+chl$dateSample<-format(as.Date(chl$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+chl$uniqueID<-paste(chl$lakeID,chl$dateSample,sep='.')#
+#
+stoich$dateSample<-format(as.Date(stoich$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+stoich$uniqueID<-paste(stoich$lakeID,stoich$dateSample,sep='.')#
+#
+#Get temperature data#
+temp<-read.csv('epiTemp2011-2014.csv')#
+temp$uniqueID<-paste(temp$lakeID,temp$dateSample,sep='.')
+head(temp)
+head(zoop.data)
+zoop.data$dateSample<-format(as.date(zoop.data$dateSample,'%m/%d/%y'),'%Y-%m-%d')
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoops<-read.csv('zoopData2011_2014.csv')#
+#
+#use only east and west long data#
+zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]#
+#
+#make areal biomass column#
+zoops$biomass_gDryMass_m2<-(zoops$abundance_num_m3*zoops$depthBottom)*(zoops$meanMass_ug/1000000)#
+#
+#fix zoop dates#
+zoop.data$dateSample<-format(as.Date(zoop.data$dateSample,'%m/%d/%y'),'%Y-%m-%d')
+#make uniqueID to match samples together#
+zoops$uniqueID<-paste(zoops$lakeID,zoops$dateSample,sep='.')#
+#
+#make frame of daphnia#
+daphnia<-zoops[zoops$taxa=='daphnia',]#
+#
+#make frame of cyclopoids#
+cyclopoid<-zoops[zoops$taxa=='cyclopoid',]#
+#
+#make frame of holopedium#
+holopedium<-zoops[zoops$taxa=='holopedium',]#
+#
+zoop.data<-c()#
+for(i in 1:nrow(daphnia)){#
+	rowi<-match(daphnia$uniqueID[i],cyclopoid$uniqueID)#
+	cyc<-cyclopoid$biomass_gDryMass_m2[rowi]#
+	rowj<-match(daphnia$uniqueID[i],holopedium$uniqueID)#
+	holo<-holopedium$biomass_gDryMass_m2[rowj]#
+	x<-data.frame(lakeID=daphnia$lakeID[i],dateSample=daphnia$dateSample[i],depthBottom=daphnia$depthBottom[i],uniqueID=daphnia$uniqueID[i],daphnia.gm2=daphnia$biomass_gDryMass_m2[i],cyclopoid.gm2=cyc,holhopedium.gm2=holo)#
+	zoop.data<-rbind(x,zoop.data)#
+}#
+#
+#save to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')
+head(zoop.data)
+write.csv(zoop.data,'zoopDataMatrix2011-2014.csv')
+#load chaoborus data#
+setwd('~/Documents/Notre Dame/long lake data/chaoborus data')#
+chaob<-read.csv('chaoborusDataLongLake2011-2014.csv')#
+#
+#fix date to match zooplankton data#
+chaob$dateSample<-format(as.Date(chaob$dateSample,'%m/%d/%y'),'%Y-%m-%d')#
+#
+#make new uniqueID#
+chaob$uniqueID<-paste(chaob$lakeID,chaob$dateSample,sep='.')#
+#
+#load water chemistry data#
+setwd('~/Documents/Notre Dame/long lake data/covariate data')#
+doc<-read.csv('doc_2011-2014FINAL.csv')#
+tp<-read.csv('tp_2011-2014FINAL.csv')#
+chl<-read.csv('chl_2011-2014FINAL.csv')#
+stoich<-read.csv('pocStoich_2011-2014.csv')#
+#
+#fix dates on all of them#
+doc$dateSample<-format(as.Date(doc$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+doc$uniqueID<-paste(doc$lakeID,doc$dateSample,sep='.')#
+#
+tp$dateSample<-format(as.Date(tp$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+tp$uniqueID<-paste(tp$lakeID,tp$dateSample,sep='.')#
+#
+chl$dateSample<-format(as.Date(chl$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+chl$uniqueID<-paste(chl$lakeID,chl$dateSample,sep='.')#
+#
+stoich$dateSample<-format(as.Date(stoich$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+stoich$uniqueID<-paste(stoich$lakeID,stoich$dateSample,sep='.')#
+#
+#Get temperature data#
+temp<-read.csv('epiTemp2011-2014.csv')#
+temp$uniqueID<-paste(temp$lakeID,temp$dateSample,sep='.')#
+cov.mat<-c()#
+for(i in 1:nrow(zoop.data)){#
+	row.doc<-match(zoop.data$uniqueID[i],doc$uniqueID)#
+	row.tp<-match(zoop.data$uniqueID[i],tp$uniqueID)#
+	row.chl<-match(zoop.data$uniqueID[i],chl$uniqueID)#
+	row.stoich<-match(zoop.data$uniqueID[i],stoich$uniqueID)#
+	row.temp<-match(zoop.data$uniqueID[i],temp$uniqueID)#
+	row.chaob<-match(zoop.data$uniqueID[i],chaob$uniqueID)#
+	x<-data.frame(DOC=doc$DOC[row.doc],TP=tp$TP[row.tp],chl=chl$chl[row.chl],CP=stoich$CP[row.stoich],temp=temp$temp[row.temp],chaob.gm2=chaob$g.m2[row.chaob])#
+	cov.mat<-rbind(cov.mat,x)#
+}#
+#
+#fix non-matching data in the covariate matrix by using the value from the closest date#
+for (i in 1:nrow(cov.mat)){#
+	lake<-zoop.data$lakeID[i]#
+	date<-zoop.data$dateSample[i]#
+	if (is.na(cov.mat$DOC[i])){#
+		lakei=doc[doc$lakeID==lake,]#
+		cov.mat$DOC[i]=lakei$DOC[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$TP[i])){#
+		lakei=tp[tp$lakeID==lake,]#
+		cov.mat$TP[i]=lakei$TP[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$chl[i])){#
+		lakei=chl[chl$lakeID==lake,]#
+		cov.mat$chl[i]=lakei$chl[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$CP[i])){#
+		lakei<-stoich[stoich$lakeID==lake & stoich$depthClass=='PML',]#
+		cov.mat$CP[i]=lakei$CP[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if(is.na(cov.mat$temp[i])){#
+		lakei<-temp[temp$lakeID==lake,]#
+		cov.mat$temp[i]=lakei$temp[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$chaob.gm2[i])){#
+		lakei<-chaob[chaob$lakeID==lake,]#
+		cov.mat$chaob.gm2[i]=lakei$g.m2[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+}#
+#
+#still some NAs, fix with average values#
+cov.mat$TP[is.na(cov.mat$TP)]=mean(cov.mat$TP,na.rm=T)#
+cov.mat$CP[is.na(cov.mat$CP)]=mean(cov.mat$CP,na.rm=T)#
+#
+#save covariate data to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+write.csv(cov.mat,'covariateData2011-2014.csv')
+cov.mat
+head(zoop.data)
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoops<-read.csv('zoopData2011_2014.csv')#
+#
+#use only east and west long data#
+zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]#
+#
+#make areal biomass column#
+zoops$biomass_gDryMass_m2<-(zoops$abundance_num_m3*zoops$depthBottom)*(zoops$meanMass_ug/1000000)#
+#
+#fix zoop dates#
+zoops$dateSample<-format(as.Date(zoop.data$dateSample,'%m/%d/%y'),'%Y-%m-%d')#
+#
+#make uniqueID to match samples together#
+zoops$uniqueID<-paste(zoops$lakeID,zoops$dateSample,sep='.')#
+#
+#make frame of daphnia#
+daphnia<-zoops[zoops$taxa=='daphnia',]#
+#
+#make frame of cyclopoids#
+cyclopoid<-zoops[zoops$taxa=='cyclopoid',]#
+#
+#make frame of holopedium#
+holopedium<-zoops[zoops$taxa=='holopedium',]#
+#
+zoop.data<-c()#
+for(i in 1:nrow(daphnia)){#
+	rowi<-match(daphnia$uniqueID[i],cyclopoid$uniqueID)#
+	cyc<-cyclopoid$biomass_gDryMass_m2[rowi]#
+	rowj<-match(daphnia$uniqueID[i],holopedium$uniqueID)#
+	holo<-holopedium$biomass_gDryMass_m2[rowj]#
+	x<-data.frame(lakeID=daphnia$lakeID[i],dateSample=daphnia$dateSample[i],depthBottom=daphnia$depthBottom[i],uniqueID=daphnia$uniqueID[i],daphnia.gm2=daphnia$biomass_gDryMass_m2[i],cyclopoid.gm2=cyc,holhopedium.gm2=holo)#
+	zoop.data<-rbind(x,zoop.data)#
+}#
+#
+#save to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+#
+write.csv(zoop.data,'zoopDataMatrix2011-2014.csv')
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoops<-read.csv('zoopData2011_2014.csv')#
+#
+#use only east and west long data#
+zoops<-zoops[zoops$lakeID=='EL' | zoops$lakeID=='WL',]#
+#
+#make areal biomass column#
+zoops$biomass_gDryMass_m2<-(zoops$abundance_num_m3*zoops$depthBottom)*(zoops$meanMass_ug/1000000)#
+#
+#fix zoop dates#
+zoops$dateSample<-format(as.Date(zoops$dateSample,'%m/%d/%y'),'%Y-%m-%d')#
+#
+#make uniqueID to match samples together#
+zoops$uniqueID<-paste(zoops$lakeID,zoops$dateSample,sep='.')#
+#
+#make frame of daphnia#
+daphnia<-zoops[zoops$taxa=='daphnia',]#
+#
+#make frame of cyclopoids#
+cyclopoid<-zoops[zoops$taxa=='cyclopoid',]#
+#
+#make frame of holopedium#
+holopedium<-zoops[zoops$taxa=='holopedium',]#
+#
+zoop.data<-c()#
+for(i in 1:nrow(daphnia)){#
+	rowi<-match(daphnia$uniqueID[i],cyclopoid$uniqueID)#
+	cyc<-cyclopoid$biomass_gDryMass_m2[rowi]#
+	rowj<-match(daphnia$uniqueID[i],holopedium$uniqueID)#
+	holo<-holopedium$biomass_gDryMass_m2[rowj]#
+	x<-data.frame(lakeID=daphnia$lakeID[i],dateSample=daphnia$dateSample[i],depthBottom=daphnia$depthBottom[i],uniqueID=daphnia$uniqueID[i],daphnia.gm2=daphnia$biomass_gDryMass_m2[i],cyclopoid.gm2=cyc,holhopedium.gm2=holo)#
+	zoop.data<-rbind(x,zoop.data)#
+}#
+#
+#save to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+#
+write.csv(zoop.data,'zoopDataMatrix2011-2014.csv')
+head(zoop.data)
+#load chaoborus data#
+setwd('~/Documents/Notre Dame/long lake data/chaoborus data')#
+chaob<-read.csv('chaoborusDataLongLake2011-2014.csv')#
+#
+#fix date to match zooplankton data#
+chaob$dateSample<-format(as.Date(chaob$dateSample,'%m/%d/%y'),'%Y-%m-%d')#
+#
+#make new uniqueID#
+chaob$uniqueID<-paste(chaob$lakeID,chaob$dateSample,sep='.')#
+#
+#load water chemistry data#
+setwd('~/Documents/Notre Dame/long lake data/covariate data')#
+doc<-read.csv('doc_2011-2014FINAL.csv')#
+tp<-read.csv('tp_2011-2014FINAL.csv')#
+chl<-read.csv('chl_2011-2014FINAL.csv')#
+stoich<-read.csv('pocStoich_2011-2014.csv')#
+#
+#fix dates on all of them#
+doc$dateSample<-format(as.Date(doc$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+doc$uniqueID<-paste(doc$lakeID,doc$dateSample,sep='.')#
+#
+tp$dateSample<-format(as.Date(tp$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+tp$uniqueID<-paste(tp$lakeID,tp$dateSample,sep='.')#
+#
+chl$dateSample<-format(as.Date(chl$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+chl$uniqueID<-paste(chl$lakeID,chl$dateSample,sep='.')#
+#
+stoich$dateSample<-format(as.Date(stoich$dateSample,'%m/%d/%Y'),'%Y-%m-%d')#
+stoich$uniqueID<-paste(stoich$lakeID,stoich$dateSample,sep='.')#
+#
+#Get temperature data#
+temp<-read.csv('epiTemp2011-2014.csv')#
+temp$uniqueID<-paste(temp$lakeID,temp$dateSample,sep='.')#
+cov.mat<-c()#
+for(i in 1:nrow(zoop.data)){#
+	row.doc<-match(zoop.data$uniqueID[i],doc$uniqueID)#
+	row.tp<-match(zoop.data$uniqueID[i],tp$uniqueID)#
+	row.chl<-match(zoop.data$uniqueID[i],chl$uniqueID)#
+	row.stoich<-match(zoop.data$uniqueID[i],stoich$uniqueID)#
+	row.temp<-match(zoop.data$uniqueID[i],temp$uniqueID)#
+	row.chaob<-match(zoop.data$uniqueID[i],chaob$uniqueID)#
+	x<-data.frame(DOC=doc$DOC[row.doc],TP=tp$TP[row.tp],chl=chl$chl[row.chl],CP=stoich$CP[row.stoich],temp=temp$temp[row.temp],chaob.gm2=chaob$g.m2[row.chaob])#
+	cov.mat<-rbind(cov.mat,x)#
+}#
+#
+#fix non-matching data in the covariate matrix by using the value from the closest date#
+for (i in 1:nrow(cov.mat)){#
+	lake<-zoop.data$lakeID[i]#
+	date<-zoop.data$dateSample[i]#
+	if (is.na(cov.mat$DOC[i])){#
+		lakei=doc[doc$lakeID==lake,]#
+		cov.mat$DOC[i]=lakei$DOC[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$TP[i])){#
+		lakei=tp[tp$lakeID==lake,]#
+		cov.mat$TP[i]=lakei$TP[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$chl[i])){#
+		lakei=chl[chl$lakeID==lake,]#
+		cov.mat$chl[i]=lakei$chl[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$CP[i])){#
+		lakei<-stoich[stoich$lakeID==lake & stoich$depthClass=='PML',]#
+		cov.mat$CP[i]=lakei$CP[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if(is.na(cov.mat$temp[i])){#
+		lakei<-temp[temp$lakeID==lake,]#
+		cov.mat$temp[i]=lakei$temp[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+	if (is.na(cov.mat$chaob.gm2[i])){#
+		lakei<-chaob[chaob$lakeID==lake,]#
+		cov.mat$chaob.gm2[i]=lakei$g.m2[which(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d')) == min(abs(as.Date(lakei$dateSample,'%Y-%m-%d')-as.Date(date,'%Y-%m-%d'))))][1]#
+	}#
+}#
+#
+#still some NAs, fix with average values#
+cov.mat$TP[is.na(cov.mat$TP)]=mean(cov.mat$TP,na.rm=T)#
+cov.mat$CP[is.na(cov.mat$CP)]=mean(cov.mat$CP,na.rm=T)#
+#
+#save covariate data to MAR data folder#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+write.csv(cov.mat,'covariateData2011-2014.csv')
+head(cov.mat)
+cov.mat
+#load zooplankton data#
+setwd('~/Documents/Notre Dame/long lake data/MAR data')#
+#
+zoops<-read.csv('zoopDataMatrix2011-2014.csv')#
+#
+#load covariate data#
+cov.mat<-read.csv('covariateData2011-2014.csv')#
+#
+#combine the two to sort#
+tot.data<-cbind(zoops,cov.mat[2:ncol(cov.mat)])#
+#
+#sort by date#
+tot.data<-tot.data[order(tot.data$lakeID,tot.data$dateSample),]#
+#make lake-year ID#
+tot.data$year<-format(as.Date(tot.data$dateSample,'%Y-%m-%d'),'%Y')#
+tot.data$lake.year<-paste(tot.data$lakeID,format(as.Date(tot.data$dateSample,'%Y-%m-%d'),'%Y'),sep='.')#
+lake.year<-c(tot.data$lake.year[tot.data$lakeID=='EL'],tot.data$lake.year[tot.data$lakeID=='WL'])#
+#
+#remove NAs#
+tot.data<-tot.data[!is.na(tot.data$cyclopoid.gm2),]#
+tot.data<-tot.data[!is.na(tot.data$holhopedium.gm2),]#
+#
+#build a matrix of data with 3 taxa#
+tsMat<-as.matrix(tot.data[,6:8],ncol=3)#
 #
 #make X and Y#
 X=tsMat[1:nrow(tsMat)-1,] # this is Xt#
 Y=tsMat[2:nrow(tsMat),] #this is Xt+1#
 #
 #make covariate matrix#
-covMat<-as.matrix(tot.data[,9:13],ncol=5)#
+covMat<-as.matrix(tot.data[,9:14],ncol=6)#
 covMat<-covMat[1:nrow(covMat)-1,]#
 #
 #remove transition year data points in both X, Y, and covariate data#
-ELyearX<-tot.data$year[tot.data$lakeID=='EL'][1:length(tot.data$year[tot.data$lakeID=='EL'])-1]#
-ELyearY<-tot.data$year[tot.data$lakeID=='EL'][2:length(tot.data$year[tot.data$lakeID=='EL'])]#
+WLyearX<-tot.data$year[tot.data$lakeID=='WL'][1:length(tot.data$year[tot.data$lakeID=='WL'])-1]#
+WLyearY<-tot.data$year[tot.data$lakeID=='WL'][2:length(tot.data$year[tot.data$lakeID=='WL'])]#
 #
-X<-X[ELyearX==ELyearY,]#
-Y<-Y[ELyearX==ELyearY,]#
-covMat<-covMat[ELyearX==ELyearY,]#
+X<-X[WLyearX==WLyearY,]#
+Y<-Y[WLyearX==WLyearY,]#
+covMat<-covMat[WLyearX==WLyearY,]#
 #
 #make z-scored matrix to find effect sizes#
 col.mean<-colMeans(covMat) #get means for columns#
@@ -797,30 +1785,366 @@ one<-rep(1,nrow(X)) #1 in the model#
 Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix#
 #
 #estimate parameters using CLS#
-D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y
-round.D<-round(D,4)
-write.csv(round.D,'MARcoeffs_ELonly.csv')
-head(tot.data)
-boxplot(tot.data$DOC~tot.data$lakeID*tot.data$year)
+D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y#
+#
+#calculate predicted #
+predict<-Z%*%D#
+#Q=length of time series#
+#P=number of species#
+#R=number of coviates#
+#E=errors (predict-X)#
+#varY=variance in Y=obs-mean#
+#root mean squared error sd(E)#
+#
+Q<-nrow(X)#
+P<-ncol(X)#
+R<-ncol(z.covMat)#
+E<-predict-z.Y#
+rmse<-sd(E)#
+varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=3)#
+#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+#calculate total r2#
+varMatrix<-t(varY)%*%varY/Q#
+R2<-1-diag(sigma)/diag(varMatrix)#
+#
+#calculate r^2 based on dY's#
+varDY=(z.Y-z.X)[-1,]#
+DYhat=c()#
+for(i in 2:nrow(predict)){#
+	x=predict[i,]-predict[i-1,]#
+	DYhat=rbind(DYhat,x)#
+}#
+#
+E_D<-DYhat-varDY#
+#
+QD<-nrow(Y)#
+varMatrix_D<-t(varDY)%*%varDY/Q#
+R2_D<-diag(sigma)/diag(varMatrix_D)#
+#
+#things to try: include chaobs as a taxa, use GPP instead of chlorophyll, just do East Long#
+#RIA on chaoborus#
+#
+#First: include chaobs in taxa#
+#build a matrix of data with 4 taxa#
+tsMat<-as.matrix(tot.data[,c(6:8,14)],ncol=4)#
+#
+#make X and Y#
+X=tsMat[1:nrow(tsMat)-1,] # this is Xt#
+Y=tsMat[2:nrow(tsMat),] #this is Xt+1#
+#
+#make covariate matrix#
+covMat<-as.matrix(tot.data[,9:13],ncol=5)#
+covMat<-covMat[1:nrow(covMat)-1,]#
+#
+#remove transition year data points in both X, Y, and covariate data#
+WLyearX<-tot.data$year[tot.data$lakeID=='WL'][1:length(tot.data$year[tot.data$lakeID=='WL'])-1]#
+WLyearY<-tot.data$year[tot.data$lakeID=='WL'][2:length(tot.data$year[tot.data$lakeID=='WL'])]#
+#
+X<-X[WLyearX==WLyearY,]#
+Y<-Y[WLyearX==WLyearY,]#
+covMat<-covMat[WLyearX==WLyearY,]#
+#
+#make z-scored matrix to find effect sizes#
+col.mean<-colMeans(covMat) #get means for columns#
+col.sd<-apply(covMat,2,sd)#
+#
+z.covMat<-c()#
+for(i in 1:nrow(covMat)){#
+	x<-(covMat[i,]-col.mean)/col.sd#
+	z.covMat<-rbind(z.covMat,x)#
+}#
+#
+#z-score X and Y#
+col.mean<-colMeans(X)#
+col.sd<-apply(X,2,sd)#
+#
+z.X<-c()#
+for(i in 1:nrow(X)){#
+	x<-(X[i,]-col.mean)/col.sd#
+	z.X<-rbind(z.X,x)#
+}#
+#
+col.mean<-colMeans(Y)#
+col.sd<-apply(Y,2,sd)#
+#
+z.Y<-c()#
+for(i in 1:nrow(X)){#
+	x<-(Y[i,]-col.mean)/col.sd#
+	z.Y<-rbind(z.Y,x)#
+}#
+#
+one<-rep(1,nrow(X)) #1 in the model#
+#
+Z<-cbind(one,z.X,z.covMat) #combining 1, X, u <---can change z.covMat to covMat if you don't want z-scored covariate matrix#
+#
+#estimate parameters using CLS#
+D<-solve(t(Z)%*%Z)%*%t(Z)%*%z.Y#
+#
+#calculate predicted #
+predict<-Z%*%D#
+#Q=length of time series#
+#P=number of species#
+#R=number of coviates#
+#E=errors (predict-X)#
+#varY=variance in Y=obs-mean#
+#root mean squared error sd(E)#
+#
+Q<-nrow(X)#
+P<-ncol(X)#
+R<-ncol(z.covMat)#
+E<-predict-z.Y#
+rmse<-sd(E)#
+varY=matrix(c(z.Y[,1]-mean(z.Y[,1]),z.Y[,2]-mean(z.Y[,2]),z.Y[,3]-mean(z.Y[,3])),ncol=4)#
+#
+sigma<-t(E)%*%E/Q#
+lnlike<--Q*(P/2)*log(2*pi)-(Q/2)*log(det(sigma))-Q*P/2#
+#
+#calculate total r2#
+varMatrix<-t(varY)%*%varY/Q#
+R2<-(1-diag(sigma))/diag(varMatrix)#
+#
+#calculate r^2 based on dY's#
+varDY=(z.Y-z.X)[-1,]#
+DYhat=c()#
+for(i in 2:nrow(predict)){#
+	x=predict[i,]-predict[i-1,]#
+	DYhat=rbind(DYhat,x)#
+}#
+#
+E_D<-DYhat-varDY#
+#
+QD<-nrow(z.Y)#
+varMatrix_D<-t(varDY)%*%varDY/Q#
+R2_D<-diag(sigma)/diag(varMatrix_D)
+D
+round(D,4)
+#load RIA script#
+setwd('~/Documents/useful R scripts')#
+source('RIA.R')#
+#
+#load zooplantkton data#
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoop.data<-read.csv('zoopData2011_2014.csv')#
+#
+#use only East and west Long data#
+zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]#
+#
+#make biomass in g m-2#
+zoop.data$biomass_g_m2<-(zoop.data$abundance_num_m3*zoop.data$depthBottom)*(zoop.data$meanMass_ug/1000000)#
+#
+#add year#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')#
+#
+#make a new data frame of matching data#
+#make uniqueID of date.taxa#
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='.')#
+#
+#seperate data frame into east and west frames#
+el.data<-zoop.data[zoop.data$lakeID=='EL',]#
+wl.data<-zoop.data[zoop.data$lakeID=='WL',]#
+#
+#match unique IDs #
+wl.biomass<-c()#
+for(i in 1:nrow(el.data)){#
+	rowi<-match(el.data$uniqueID[i],wl.data$uniqueID)#
+	wl.biomass[i]<-wl.data$biomass_g_m2[rowi]#
+}#
+el.data$wl.biomass<-wl.biomass#
+zoop.data<-el.data[,c(4,6,10,11,18,21)]#
+colnames(zoop.data)[c(5,6)]<-c('el.biomass','wl.biomass')#
+#
+zoop.data<-zoop.data[zoop.data$dateSample!='2014-06-25',]#
+zoop.data<-zoop.data[zoop.data$dateSample!='2011-06-15',]#
+zoop.data$wl.biomass[is.na(zoop.data$wl.biomass)]=0#
+#add year#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')#
+#
+#run RIA on specific zooplankton taxa#
+#Daphnia#
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000) #p=0.0418
+head(zoop.data)
+#load RIA script#
+setwd('~/Documents/useful R scripts')#
+source('RIA.R')#
+#
+#load zooplantkton data#
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoop.data<-read.csv('zoopData2011_2014.csv')#
+#
+#use only East and west Long data#
+zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]#
+#
+#make biomass in g m-2#
+zoop.data$biomass_g_m2<-(zoop.data$abundance_num_m3*zoop.data$depthBottom)*(zoop.data$meanMass_ug/1000000)#
+#
+#add year#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%m-%d-%y'),'%Y')
+head(zoop.data)
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%m/%d/%y'),'%Y')
+head(zoop.data)
+#make a new data frame of matching data#
+#make uniqueID of date.taxa#
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='.')#
+#
+#seperate data frame into east and west frames#
+el.data<-zoop.data[zoop.data$lakeID=='EL',]#
+wl.data<-zoop.data[zoop.data$lakeID=='WL',]#
+#
+#match unique IDs #
+wl.biomass<-c()#
+for(i in 1:nrow(el.data)){#
+	rowi<-match(el.data$uniqueID[i],wl.data$uniqueID)#
+	wl.biomass[i]<-wl.data$biomass_g_m2[rowi]#
+}#
+el.data$wl.biomass<-wl.biomass#
+zoop.data<-el.data[,c(4,6,10,11,18,21)]#
+colnames(zoop.data)[c(5,6)]<-c('el.biomass','wl.biomass')#
+#
+zoop.data<-zoop.data[zoop.data$dateSample!='2014-06-25',]#
+zoop.data<-zoop.data[zoop.data$dateSample!='2011-06-15',]#
+zoop.data$wl.biomass[is.na(zoop.data$wl.biomass)]=0#
+#add year#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%Y-%m-%d'),'%Y')
+head(zoop.data)
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%m/%d/%y'),'%Y')
+zoop.data
+setwd('~/Documents/Notre Dame/long lake data/FINAL_data')#
+#
+zoop.data<-read.csv('zoopData2011_2014.csv')#
+#
+#use only East and west Long data#
+zoop.data<-zoop.data[zoop.data$lakeID=='EL' | zoop.data$lakeID=='WL',]#
+#
+#make biomass in g m-2#
+zoop.data$biomass_g_m2<-(zoop.data$abundance_num_m3*zoop.data$depthBottom)*(zoop.data$meanMass_ug/1000000)#
+#
+#add year#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%m/%d/%y'),'%Y')#
+#
+#make a new data frame of matching data#
+#make uniqueID of date.taxa#
+zoop.data$uniqueID<-paste(zoop.data$dateSample,zoop.data$taxa,sep='.')#
+#
+#seperate data frame into east and west frames#
+el.data<-zoop.data[zoop.data$lakeID=='EL',]#
+wl.data<-zoop.data[zoop.data$lakeID=='WL',]#
+#
+#match unique IDs #
+wl.biomass<-c()#
+for(i in 1:nrow(el.data)){#
+	rowi<-match(el.data$uniqueID[i],wl.data$uniqueID)#
+	wl.biomass[i]<-wl.data$biomass_g_m2[rowi]#
+}#
+el.data$wl.biomass<-wl.biomass#
+zoop.data<-el.data[,c(4,6,10,11,18,21)]#
+colnames(zoop.data)[c(5,6)]<-c('el.biomass','wl.biomass')
+zoop.data
+zoop.data$wl.biomass[is.na(zoop.data$wl.biomass)]=0#
+#add year#
+zoop.data$year<-format(as.Date(zoop.data$dateSample,'%m/%d/%y'),'%Y')
+head(zoop.data)
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='daphnia' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000) #p=0.0418
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='cyclopoid' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000) #p=0.177
+RIA(pre1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],pre2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2011 | zoop.data$year==2012)],post1=zoop.data$el.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)],post2=zoop.data$wl.biomass[zoop.data$taxa=='holopedium' & (zoop.data$year==2013 | zoop.data$year==2014)],n.iter=5000)
+ag.data<-aggregate(cbind(el.biomass,wl.biomass)~year+dateSample,data=zoop.data,sum,na.rm=T)#
+#
+RIA(pre1=ag.data$el.biomass[ag.data$year==2011 | ag.data$year==2012],pre2=ag.data$wl.biomass[ag.data$year==2011 | ag.data$year==2012],post1=ag.data$el.biomass[ag.data$year==2013 | ag.data$year==2014],post2=ag.data$wl.biomass[ag.data$year==2013 | ag.data$year==2014],n.iter=5000) #p=0.0382
 #load zooplankton data#
 setwd('~/Documents/Notre Dame/long lake data/MAR data')#
 #
 zoops<-read.csv('zoopDataMatrix2011-2014.csv')#
 #
-#load covariate data#
-cov.mat<-read.csv('covariateData2011-2014.csv')#
+#need to match reference and treatment basin taxa and date#
+#two data frames of East and West, then match East with west and subtract in the form Y=Co-CI, were Co is tretment, CI is reference#
 #
-#combine the two to sort#
-tot.data<-cbind(zoops,cov.mat[2:ncol(cov.mat)])
-boxplot(tot.data$DOC~tot.data$lakeID*tot.data$year)
-tot.data$year<-format(as.Date(tot.data$dateSample,'%Y-%m-%d'),'%Y')
-boxplot(tot.data$DOC~tot.data$lakeID*tot.data$year)
-boxplot(tot.data$DOC~tot.data$lakeID*tot.data$year,col=rep(c('brown','blue'),4))
-boxplot(tot.data$temp~tot.data$lakeID*tot.data$year,col=rep(c('brown','blue'),4))
-boxplot(tot.data$TP~tot.data$lakeID*tot.data$year,col=rep(c('brown','blue'),4))
-boxplot(tot.data$chl~tot.data$lakeID*tot.data$year,col=rep(c('brown','blue'),4))
-boxplot(tot.data$CP~tot.data$lakeID*tot.data$year,col=rep(c('brown','blue'),4))
-boxplot(tot.data$CP~tot.data$lakeID*tot.data$year,col=rep(c('brown','blue'),4))
-abline(h=250,col='red',lty=2,lwd=2)
-28.45*12
-2845*12
+zoops.el<-zoops[zoops$lakeID=='EL',]#
+zoops.wl<-zoops[zoops$lakeID=='WL',]#
+#
+#add daphnia, cyclopoid, and holopedium data frames from WL to EL#
+wlZoops<-c()#
+for(i in 1:nrow(zoops.el)){#
+	rowi<-match(zoops.el$dateSample[i],zoops.wl$dateSample)#
+	x<-zoops.wl[rowi,c(6,7,8)]#
+	wlZoops<-rbind(wlZoops,x)#
+}#
+colnames(wlZoops)<-c('daph.wl','cyc.wl','holo.wl')#
+#
+tot.zoops<-cbind(zoops.el,wlZoops)#
+#
+#get Y for each taxa by subtracting reference from treatment#
+daph.Y<-tot.zoops$daphnia.gm2-tot.zoops$daph.wl#
+cyclo.Y<-tot.zoops$cyclopoid.gm2-tot.zoops$cyc.wl#
+holo.Y<-tot.zoops$holhopedium.gm2-tot.zoops$holo.wl#
+#
+#add date to get final Y data frame#
+Y<-data.frame(dateSample=tot.zoops$dateSample,daphnia=daph.Y,cyclopoid=cyclo.Y,holopedium=holo.Y)#
+#
+#order Y by date#
+Y<-Y[order(Y$dateSample),]#
+#
+#add year to Y data frame#
+Y$year<-format(as.Date(Y$dateSample,'%Y-%m-%d'),'%Y')#
+#
+#make Yt and Yt+1#
+Yt<-Y[1:nrow(Y)-1,]#
+Ytplus1<-Y[2:nrow(Y),]#
+#
+#remove NAs -> need to do all of this for each taxa#
+Yt.daphnia<-Yt[!is.na(Yt$daphnia),c(1,2,5)]#
+Yt.cyclopoid<-Yt[!is.na(Yt$cyclopoid),c(1,3,5)]#
+Yt.holopedium<-Yt[!is.na(Yt$holopedium),c(1,4,5)]#
+#
+Ytplus1.daphnia<-Ytplus1[!is.na(Ytplus1$daphnia),c(1,2,5)]#
+Ytplus1.cyclopoid<-Ytplus1[!is.na(Ytplus1$cyclopoid),c(1,3,5)]#
+Ytplus1.holopedium<-Ytplus1[!is.na(Ytplus1$holopedium),c(1,4,5)]#
+#
+Mi.daphnia<-rep(0,nrow(Yt.daphnia))#
+Mi.daphnia[Yt.daphnia$year==2013 | Yt.daphnia$year==2014]=1#
+Mi.daphnia.2<-rep(0,nrow(Yt.daphnia))#
+Mi.daphnia.2[Yt.daphnia$year==2014]=1#
+Mi.daphnia.2<-Mi.daphnia.2+Mi.daphnia#
+#
+Mi.cyclopoid<-rep(0,nrow(Yt.cyclopoid))#
+Mi.cyclopoid[Yt.cyclopoid$year==2013 | Yt.cyclopoid$year==2014]=1#
+Mi.holopedium<-rep(0,nrow(Yt.holopedium))#
+Mi.holopedium[Yt.holopedium$year==2013|Yt.holopedium$year==2014]=1#
+#
+#remove transition year#
+Yt.year<-Yt.daphnia$year#
+Ytplus1.year<-Ytplus1.daphnia$year#
+Yt.daphnia<-as.matrix(Yt.daphnia[Yt.year==Ytplus1.year,2])#
+Ytplus1.daphnia<-as.matrix(Ytplus1.daphnia[Yt.year==Ytplus1.year,2])#
+Mi.daphnia<-Mi.daphnia[Yt.year==Ytplus1.year]#
+Mi.daphnia.2<-Mi.daphnia.2[Yt.year==Ytplus1.year]#
+#
+Yt.year<-Yt.cyclopoid$year#
+Ytplus1.year<-Ytplus1.cyclopoid$year#
+Yt.cyclopoid<-as.matrix(Yt.cyclopoid[Yt.year==Ytplus1.year,2])#
+Ytplus1.cyclopoid<-as.matrix(Ytplus1.cyclopoid[Yt.year==Ytplus1.year,2])#
+Mi.cyclopoid<-Mi.cyclopoid[Yt.year==Ytplus1.year]#
+#
+Yt.year<-Yt.holopedium$year#
+Ytplus1.year<-Ytplus1.holopedium$year#
+Yt.holopedium<-as.matrix(Yt.holopedium[Yt.year==Ytplus1.year,2])#
+Ytplus1.holopedium<-as.matrix(Ytplus1.holopedium[Yt.year==Ytplus1.year,2])#
+Mi.holopedium<-Mi.holopedium[Yt.year==Ytplus1.year]
+daphnia.intercept<-glm(Ytplus1.daphnia~1)
+daphnia.intercept
+daphnia.auto<-glm(Ytplus1.daphnia~Yt.daphnia)
+daphnia.auto
+daphnia.treatment<-glm(Ytplus1.daphnia~Yt.daphnia+Mi.daphnia)
+daphnia.treatment
+daphnia.treatment.resids<-summary(daphnia.treatment)$residuals
+daphnia.treatment.resids
+hist(Ytplus1.daphnia)
+log(0)
+daphnia.treatment
+zoops.el
+zoops.el[order(zoops.el$dateSample),]
+tot.zoops[order(tot.zoops$dateSample)]
+tot.zoops[order(tot.zoops$dateSample),]
